@@ -1,0 +1,271 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "expenses.schema.json",
+  "title": "CMI 水灯节费用与支出",
+  "description": "金额仅保存明确提供的数值；空值及待报价不参与合计。任务引用与配置引用由运行时/CLI校验。sourceRow 是原始 CSV 行的不可推算快照。",
+  "type": "object",
+  "required": [
+    "version",
+    "meta",
+    "config",
+    "expenses"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "meta": {
+      "type": "object",
+      "required": [
+        "title",
+        "updatedAt",
+        "timeZone",
+        "currency"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?\\+07:00$"
+        },
+        "timeZone": {
+          "const": "Asia/Bangkok"
+        },
+        "currency": {
+          "const": "THB"
+        },
+        "import": {
+          "type": "object",
+          "properties": {
+            "sourceFile": {
+              "type": "string"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "rows": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "importedAt": {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?\\+07:00$"
+            }
+          }
+        }
+      }
+    },
+    "config": {
+      "type": "object",
+      "required": [
+        "categories",
+        "statuses",
+        "payers"
+      ],
+      "properties": {
+        "categories": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/entity"
+          }
+        },
+        "statuses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/entity"
+          }
+        },
+        "payers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/entity"
+          }
+        }
+      }
+    },
+    "expenses": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/expense"
+      }
+    }
+  },
+  "$defs": {
+    "entity": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "color"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "color": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "aliases": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "expense": {
+      "type": "object",
+      "required": [
+        "item",
+        "purpose",
+        "category",
+        "quantity",
+        "unit",
+        "payer",
+        "place",
+        "status",
+        "source",
+        "notes",
+        "id",
+        "taskIds",
+        "budgetUnitPrice",
+        "budgetSubtotal",
+        "actual",
+        "date",
+        "updatedAt"
+      ],
+      "properties": {
+        "item": {
+          "type": "string",
+          "minLength": 1
+        },
+        "purpose": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "quantity": {
+          "type": "string"
+        },
+        "unit": {
+          "type": "string"
+        },
+        "payer": {
+          "type": "string"
+        },
+        "place": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "notes": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+        },
+        "taskIds": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^T[0-9]+$"
+          }
+        },
+        "budgetUnitPrice": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            },
+            {
+              "enum": [
+                "",
+                "待报价"
+              ]
+            }
+          ]
+        },
+        "budgetSubtotal": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            },
+            {
+              "enum": [
+                "",
+                "待报价"
+              ]
+            }
+          ]
+        },
+        "actual": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            },
+            {
+              "const": ""
+            }
+          ]
+        },
+        "date": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date"
+            },
+            {
+              "enum": [
+                "",
+                "待定"
+              ]
+            }
+          ]
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?\\+07:00$"
+        },
+        "sourceRow": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

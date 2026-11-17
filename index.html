@@ -1,0 +1,29 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>任务管理</title><link rel="stylesheet" href="assets/viewer.css"><script src="assets/board-core.js" defer></script><script src="assets/expenses-core.js" defer></script><script src="assets/expenses-viewer.js" defer></script><script src="assets/viewer.js" defer></script></head><body>
+<div class="app">
+  <div id="sticky-top" class="sticky-top">
+    <p id="preview-banner" class="preview-banner" hidden></p><header class="topbar"><div class="brand"><div class="brand-logos" aria-label="CMI 标识"><img id="logo-icon" alt="CMI 彩色人形图标"><img id="logo-community" alt="CMI Community 字标"></div><h1 class="nav-title" id="page-title">任务管理</h1></div><div class="top-meta"><time id="updated-time"></time><span class="readonly" id="readonly-label"></span></div></header>
+    <div class="filter-context"><span id="filter-summary" class="context-line" data-filter-summary aria-live="polite"></span><p class="context-search" data-search-summary></p></div>
+  </div>
+  <section class="hero" aria-label="活动基本信息"><div><div class="eyebrow"></div><h2 class="hero-title"></h2><div class="event-meta" id="event-meta"></div><p class="mobile-event-extra" id="mobile-event-extra"></p></div><div class="hero-date"><div class="event-note" id="event-note"></div><div class="calendar-tile"><strong></strong><span></span></div></div></section>
+  <section class="stats" id="stats" aria-label="全量任务进度"></section>
+  <div class="filter-toggle-row"><button id="toggle-filters" data-action="toggle-filters" aria-expanded="false" aria-controls="filter-panel"><span>筛选条件 <span id="active-filter-count"></span></span><span id="filter-toggle-label">展开 ＋</span></button></div>
+  <section class="filters is-collapsed" id="filter-panel" aria-label="全部视图筛选">
+    <div class="filter-field"><label for="filter-participant">参与者／对接人</label><select id="filter-participant" data-filter="participant"></select></div>
+    <div class="filter-field"><label for="filter-assignee">执行人</label><select id="filter-assignee" data-filter="assignee"></select></div>
+    <div class="filter-field"><label for="filter-aspect">任务范畴</label><select id="filter-aspect" data-filter="aspect"></select></div>
+    <div class="filter-field"><label for="filter-date">截止日期</label><select id="filter-date" data-filter="date"></select></div>
+    <div class="filter-field"><label for="filter-tag">线索标签</label><select id="filter-tag" data-filter="tag"></select></div>
+    <div class="filter-field"><label for="filter-pending">待决事项</label><select id="filter-pending" data-filter="pending"></select></div>
+    <button class="quiet-button" data-action="reset-filters" id="reset-filters"></button>
+  </section>
+  <nav class="view-nav" aria-label="任务视图"><div class="tabs" role="tablist" aria-label="选择视图"></div><div class="nav-tools"><span class="result-count" id="result-count" aria-live="polite"></span><label class="search"><span id="search-icon"></span><input type="search" id="search-input" placeholder="查找任务名称或编号" aria-label="查找任务名称或编号"></label></div></nav>
+  <main id="view-panel" role="tabpanel" aria-labelledby="tab-chain">
+    <div class="view-toolbar"><div><div class="view-heading"><h2 id="view-title"></h2></div><p class="view-description" id="view-description"></p></div><div class="view-controls" id="view-controls"></div></div>
+    <div class="focus-bar" id="focus-bar" hidden></div>
+    <div class="legend-rail"><div class="legend" id="legend"></div><span class="interaction-hint" id="interaction-hint"></span></div>
+    <div class="workspace graph" id="canvas-scroll" tabindex="0" aria-label="任务视图，可滚动查看"></div>
+  </main>
+  <footer class="footer"><div class="footer-left"><span id="dependency-count"></span><span class="validation-good" id="validation-status"></span></div><span id="date-range-footer"></span></footer>
+</div>
+<dialog id="task-dialog" aria-labelledby="detail-title"><div class="dialog-context"><span class="context-line" data-filter-summary></span><p class="context-search" data-search-summary></p></div><div class="detail-header"><span>任务详情</span><button class="icon-button" data-action="close-dialog" aria-label="关闭任务详情" autofocus></button></div><div id="detail-content"></div></dialog>
+<noscript>请启用JavaScript查看任务总表。</noscript></body></html>
