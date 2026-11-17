@@ -2,7 +2,7 @@
   "version": 3,
   "meta": {
     "title": "2026 CMI 水灯节庆典筹备任务管理",
-    "updatedAt": "2026-11-18T04:21:19.690237+07:00",
+    "updatedAt": "2026-11-18T05:04:26.457966+07:00",
     "timeZone": "Asia/Bangkok",
     "heroTitle": "水灯节 · 筹备总览",
     "event": {
@@ -2039,6 +2039,25 @@
       "pre": [],
       "pendingNote": "",
       "notes": "汇总每笔实际花费、小票及付款人，核对总账无空项。"
+    },
+    {
+      "id": "T70",
+      "title": "交清本月网络费用，确保现场有网",
+      "description": "在活动开始前交清 CMI Studio 本月的网络费用，并确认现场网络能正常使用。缴费金额、缴费方式和运营商待补充。",
+      "category": "环境",
+      "threads": [
+        "钱·总账"
+      ],
+      "date": "2026-11-21",
+      "timeHint": "",
+      "layer": "中",
+      "location": "现场",
+      "status": "未开始",
+      "executor": [],
+      "participants": [],
+      "pre": [],
+      "pendingNote": "",
+      "notes": "交清本月网费，现场联网测试通过。"
     }
   ]
 }

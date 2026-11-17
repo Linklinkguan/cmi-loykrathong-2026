@@ -2,7 +2,7 @@
   "version": 1,
   "meta": {
     "title": "费用与支出",
-    "updatedAt": "2026-11-18T04:32:20.306683+07:00",
+    "updatedAt": "2026-11-18T05:04:34.581961+07:00",
     "timeZone": "Asia/Bangkok",
     "currency": "THB",
     "import": {
@@ -3877,6 +3877,27 @@
         "来源": "Link原话",
         "备注": ""
       }
+    },
+    {
+      "id": "P082",
+      "item": "本月网络费用",
+      "purpose": "现场网络，活动开始前交清",
+      "category": "场地",
+      "taskIds": [
+        "T70"
+      ],
+      "quantity": "1",
+      "unit": "月",
+      "budgetUnitPrice": "",
+      "budgetSubtotal": "",
+      "actual": "",
+      "payer": "",
+      "place": "",
+      "date": "2026-11-21",
+      "status": "未购",
+      "source": "Link原话",
+      "notes": "金额与缴费方式待补充",
+      "updatedAt": "2026-11-18T05:04:34.581961+07:00"
     }
   ]
 }
