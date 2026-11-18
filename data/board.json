@@ -2,7 +2,7 @@
   "version": 3,
   "meta": {
     "title": "2026 CMI 水灯节庆典筹备任务管理",
-    "updatedAt": "2026-11-18T10:47:06.365890+07:00",
+    "updatedAt": "2026-11-18T10:51:16.884274+07:00",
     "timeZone": "Asia/Bangkok",
     "heroTitle": "水灯节 · 筹备总览",
     "event": {
@@ -54,6 +54,12 @@
       "id": "Elon",
       "name": "Elon",
       "color": "#5B6FC2",
+      "aliases": []
+    },
+    {
+      "id": "紫姀",
+      "name": "紫姀",
+      "color": "#9C79A9",
       "aliases": []
     }
   ],
@@ -2257,6 +2263,35 @@
           "time": "2026-11-18 10:31",
           "status": "进行中",
           "note": "开始处理；结果分别影响 T13、T30、T70。",
+          "by": "Link"
+        }
+      ]
+    },
+    {
+      "id": "T77",
+      "title": "传播活动推文并点对点邀请参与人",
+      "description": "转发活动宣传推文，并一对一邀请参与人。",
+      "category": "社区展示",
+      "threads": [
+        "码·社媒"
+      ],
+      "date": "2026-11-18",
+      "timeHint": "",
+      "layer": "中",
+      "location": "远程",
+      "status": "进行中",
+      "executor": [
+        "紫姀"
+      ],
+      "participants": [],
+      "pre": [],
+      "pendingNote": "",
+      "notes": "紫姀是社区创始人、核心共建者，目前和 Link 协作。",
+      "progress_log": [
+        {
+          "time": "2026-11-18 10:50",
+          "status": "进行中",
+          "note": "新增：补记紫姀正在做的推文转发和点对点邀请，作为进行中工作的备份记录",
           "by": "Link"
         }
       ]
