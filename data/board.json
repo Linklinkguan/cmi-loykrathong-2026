@@ -2,7 +2,7 @@
   "version": 3,
   "meta": {
     "title": "2026 CMI 水灯节庆典筹备任务管理",
-    "updatedAt": "2026-11-18T12:26:27.146106+07:00",
+    "updatedAt": "2026-11-18T13:35:05.756016+07:00",
     "timeZone": "Asia/Bangkok",
     "heroTitle": "水灯节 · 筹备总览",
     "event": {
@@ -2179,7 +2179,7 @@
       "timeHint": "",
       "layer": "软",
       "location": "远程",
-      "status": "进行中",
+      "status": "已完成",
       "executor": [
         "Link"
       ],
@@ -2194,6 +2194,12 @@
           "time": "2026-11-18 10:31",
           "status": "进行中",
           "note": "开始处理：手机顶部是否压到约 150px；页头是否加回「约35人」和「20:00后自愿参加篝火」。",
+          "by": "Link"
+        },
+        {
+          "time": "2026-11-18 13:34",
+          "status": "已完成",
+          "note": "Link 确认完成",
           "by": "Link"
         }
       ]
