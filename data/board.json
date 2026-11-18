@@ -2,7 +2,7 @@
   "version": 3,
   "meta": {
     "title": "2026 CMI 水灯节庆典筹备任务管理",
-    "updatedAt": "2026-11-18T11:15:51.254439+07:00",
+    "updatedAt": "2026-11-18T11:17:05.150718+07:00",
     "timeZone": "Asia/Bangkok",
     "heroTitle": "水灯节 · 筹备总览",
     "event": {
@@ -2358,6 +2358,34 @@
         {
           "time": "2026-11-18 10:54",
           "note": "Link 定下计划",
+          "by": "Link"
+        }
+      ]
+    },
+    {
+      "id": "T79",
+      "title": "同步群内共建相关发消息的成员名单",
+      "description": "Link 向 Elon 逐一说明「CMI 2026 水灯节庆典 报名/共创群」里与共建相关的发消息成员分别是谁，形成逐人名单。完成标准：每位相关成员都有一行（群昵称、对应的人、提过的共建事项）。公开页只写昵称，不写电话、微信号等。",
+      "category": "管理",
+      "threads": [
+        "人·岗位"
+      ],
+      "date": "2026-11-18",
+      "timeHint": "",
+      "layer": "中",
+      "location": "远程",
+      "status": "待决",
+      "executor": [
+        "Link"
+      ],
+      "participants": [],
+      "pre": [],
+      "pendingNote": "待 Link 逐一说明群内共建相关发消息成员。",
+      "notes": "",
+      "progress_log": [
+        {
+          "time": "2026-11-18 11:15",
+          "note": "应 Link 要求新建",
           "by": "Link"
         }
       ]
