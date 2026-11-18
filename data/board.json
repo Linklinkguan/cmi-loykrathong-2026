@@ -2,7 +2,7 @@
   "version": 3,
   "meta": {
     "title": "2026 CMI 水灯节庆典筹备任务管理",
-    "updatedAt": "2026-11-18T11:34:28.710067+07:00",
+    "updatedAt": "2026-11-18T12:12:18.816872+07:00",
     "timeZone": "Asia/Bangkok",
     "heroTitle": "水灯节 · 筹备总览",
     "event": {
@@ -2363,7 +2363,7 @@
       "timeHint": "",
       "layer": "中",
       "location": "远程",
-      "status": "未开始",
+      "status": "已完成",
       "executor": [
         "Link"
       ],
@@ -2377,6 +2377,12 @@
         {
           "time": "2026-11-18 10:54",
           "note": "Link 定下计划",
+          "by": "Link"
+        },
+        {
+          "time": "2026-11-18 12:11",
+          "status": "已完成",
+          "note": "小红书笔记已发布（封面含公众号原文二维码与2026年日期）；公众号长文已置顶，Link 确认，任务完成。",
           "by": "Link"
         }
       ]
