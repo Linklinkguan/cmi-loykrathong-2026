@@ -1,8 +1,10 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>任务管理</title><link rel="stylesheet" href="assets/viewer.css"><script src="assets/board-core.js" defer></script><script src="assets/expenses-core.js" defer></script><script src="assets/expenses-viewer.js" defer></script><script src="assets/viewer.js" defer></script></head><body>
+<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>任务管理</title><link rel="stylesheet" href="assets/viewer.css?v=9.1"><link rel="stylesheet" href="assets/status-ui.css?v=9.1"><script src="assets/board-core.js?v=9.1" defer></script><script src="assets/status-ui.js?v=9.1" defer></script><script src="assets/expenses-core.js?v=9.1" defer></script><script src="assets/expenses-viewer.js?v=9.1" defer></script><script src="assets/viewer.js?v=9.1" defer></script></head><body>
 <div class="app">
   <div id="sticky-top" class="sticky-top">
     <p id="preview-banner" class="preview-banner" hidden></p><header class="topbar"><div class="brand"><div class="brand-logos" aria-label="CMI 标识"><img id="logo-icon" alt="CMI 彩色人形图标"><img id="logo-community" alt="CMI Community 字标"></div><div class="nav-title-wrap"><h1 class="nav-title" id="page-title">任务管理</h1><p class="nav-event-line" id="nav-event-line" role="button" tabindex="0" aria-expanded="false" title=""></p></div></div><div class="nav-calendar" id="nav-calendar" aria-label="活动日"><strong></strong><span></span></div><div class="top-meta"><time id="updated-time"></time><span class="readonly" id="readonly-label"></span></div></header>
-    <div class="filter-context"><button type="button" class="context-toggle" id="toggle-filters" data-action="toggle-filters" aria-expanded="false" aria-controls="filter-panel"><span id="filter-summary" class="context-line" data-filter-summary aria-live="polite"></span><span class="context-tail"><span class="toggle-count" id="toggle-count"></span><span class="active-filter-count" id="active-filter-count"></span><span class="filter-toggle-label" id="filter-toggle-label">筛选 ▾</span></span></button><p class="context-search" data-search-summary></p></div>
+    <div class="filter-context"><button type="button" class="context-toggle" id="toggle-filters" data-action="toggle-filters" aria-expanded="false" aria-controls="filter-panel"><span id="filter-summary" class="context-line" data-filter-summary aria-live="polite"></span><span class="context-tail"><span class="toggle-count" id="toggle-count"></span><span class="active-filter-count" id="active-filter-count"></span><span class="filter-toggle-label" id="filter-toggle-label">筛选 ▾</span></span></button><p class="context-search" data-search-summary></p><div class="status-bar status-bar-desk" id="status-bar" data-status-bar role="group" aria-label="按完成状态筛选，可多选"></div></div>
+    <p class="filter-conditions" id="filter-conditions" aria-live="polite" hidden></p>
+    <div class="top-progress" id="top-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100"><i></i></div>
   </div>
   <section class="hero" aria-label="活动基本信息"><div><div class="eyebrow"></div><h2 class="hero-title"></h2><div class="event-meta" id="event-meta"></div><p class="mobile-event-extra" id="mobile-event-extra"></p></div><div class="hero-date"><div class="event-note" id="event-note"></div><div class="calendar-tile"><strong></strong><span></span></div></div></section>
   <div class="layout" id="layout">
@@ -12,12 +14,13 @@
   </section>
   <section class="rail-panel" id="filters-rail" data-panel="filters"><div class="rail-head"><h2>筛选</h2><button class="rail-toggle" data-action="toggle-panel" data-panel="filters" aria-expanded="true" aria-controls="filter-panel"></button></div>
     <section class="filters is-collapsed" id="filter-panel" aria-label="全部视图筛选">
+    <button type="button" class="quick-unassigned" id="quick-unassigned" data-action="filter-unassigned" aria-pressed="false"></button>
     <div class="filter-field"><label for="filter-participant">参与者／对接人</label><select id="filter-participant" data-filter="participant"></select></div>
     <div class="filter-field"><label for="filter-assignee">执行人</label><select id="filter-assignee" data-filter="assignee"></select></div>
     <div class="filter-field"><label for="filter-aspect">任务范畴</label><select id="filter-aspect" data-filter="aspect"></select></div>
     <div class="filter-field"><label for="filter-date">截止日期</label><select id="filter-date" data-filter="date"></select></div>
     <div class="filter-field"><label for="filter-tag">线索标签</label><select id="filter-tag" data-filter="tag"></select></div>
-    <div class="filter-field"><label for="filter-pending">待决事项</label><select id="filter-pending" data-filter="pending"></select></div>
+    
     <button class="quiet-button" data-action="reset-filters" id="reset-filters"></button>
   </section>
   </section>
@@ -26,7 +29,7 @@
   <nav class="view-nav" aria-label="任务视图"><div class="tabs" role="tablist" aria-label="选择视图"></div><div class="nav-tools"><div class="view-controls" id="view-controls"></div><div class="legend-wrap" id="legend-wrap"><button class="legend-toggle" id="legend-toggle" data-action="toggle-legend" aria-expanded="false" aria-controls="legend-pop">图例</button><div class="legend-pop" id="legend-pop" role="note" aria-label="图例说明" hidden><div class="legend" id="legend"></div><p class="interaction-hint" id="interaction-hint"></p></div></div><span class="result-count" id="result-count" aria-live="polite"></span><label class="search"><span id="search-icon"></span><input type="search" id="search-input" placeholder="查找任务名称或编号" aria-label="查找任务名称或编号"></label><button class="fs-button" id="fullscreen-toggle" data-action="toggle-fullscreen" aria-pressed="false"></button></div></nav>
   <main id="view-panel" role="tabpanel" aria-labelledby="tab-chain">
     <div class="view-toolbar sr-only"><h2 id="view-title"></h2><p class="view-description" id="view-description"></p></div>
-    <div class="focus-bar" id="focus-bar" hidden></div>
+    <div class="mobile-view-controls" id="mobile-view-controls"></div><div class="focus-bar" id="focus-bar" hidden></div>
         <div class="workspace graph" id="canvas-scroll" tabindex="0" aria-label="任务视图，可滚动查看"></div>
   </main>
   </div>

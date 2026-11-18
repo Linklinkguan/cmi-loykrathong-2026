@@ -2,7 +2,7 @@
   "version": 3,
   "meta": {
     "title": "2026 CMI 水灯节庆典筹备任务管理",
-    "updatedAt": "2026-11-18T13:45:34.866107+07:00",
+    "updatedAt": "2026-11-18T14:19:20.521509+07:00",
     "timeZone": "Asia/Bangkok",
     "heroTitle": "水灯节 · 筹备总览",
     "event": {
@@ -268,11 +268,14 @@
         "isPending": false
       },
       {
-        "id": "待决",
-        "name": "待决",
-        "color": "#C4553F",
+        "id": "搁置",
+        "name": "搁置",
+        "color": "#6E6A64",
         "isDone": false,
-        "isPending": true
+        "isPending": true,
+        "aliases": [
+          "待决"
+        ]
       }
     ],
     "layers": [
@@ -603,7 +606,7 @@
       "timeHint": "上",
       "layer": "中",
       "location": "远程",
-      "status": "待决",
+      "status": "搁置",
       "executor": [
         "Link"
       ],
@@ -681,7 +684,7 @@
       "timeHint": "上",
       "layer": "中",
       "location": "现场",
-      "status": "待决",
+      "status": "搁置",
       "executor": [
         "Link"
       ],
@@ -900,7 +903,7 @@
       "timeHint": "",
       "layer": "中",
       "location": "远程",
-      "status": "待决",
+      "status": "搁置",
       "executor": [
         "Link"
       ],
@@ -1042,7 +1045,7 @@
       "timeHint": "",
       "layer": "中",
       "location": "远程",
-      "status": "待决",
+      "status": "搁置",
       "executor": [
         "Link"
       ],
@@ -1089,7 +1092,7 @@
       "timeHint": "上",
       "layer": "中",
       "location": "远程",
-      "status": "待决",
+      "status": "搁置",
       "executor": [
         "Link"
       ],
@@ -1389,7 +1392,7 @@
       "timeHint": "",
       "layer": "中",
       "location": "远程",
-      "status": "待决",
+      "status": "搁置",
       "executor": [
         "Link"
       ],
@@ -1671,7 +1674,7 @@
       "timeHint": "上",
       "layer": "中",
       "location": "现场",
-      "status": "待决",
+      "status": "搁置",
       "executor": [
         "Link"
       ],
@@ -1854,7 +1857,7 @@
       "timeHint": "",
       "layer": "中",
       "location": "现场",
-      "status": "待决",
+      "status": "搁置",
       "executor": [
         "Link"
       ],
@@ -1875,7 +1878,7 @@
       "timeHint": "",
       "layer": "中",
       "location": "远程",
-      "status": "待决",
+      "status": "搁置",
       "executor": [
         "Link"
       ],
@@ -2012,7 +2015,7 @@
       "timeHint": "12:00",
       "layer": "中",
       "location": "现场",
-      "status": "待决",
+      "status": "搁置",
       "executor": [
         "Link"
       ],
@@ -2447,7 +2450,7 @@
       "timeHint": "",
       "layer": "中",
       "location": "远程",
-      "status": "待决",
+      "status": "搁置",
       "executor": [
         "Link"
       ],

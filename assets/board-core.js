@@ -116,7 +116,7 @@
       if (stageDates.has(t.date)) error('duplicate','阶段日期重复：'+t.date);stageDates.add(t.date);
     }
     for (const t of collections.statuses.values()) for (const k of ['isDone','isPending']) if (typeof t[k]!=='boolean') error('shape','状态 '+t.id+' 的 '+k+' 必须为布尔值');
-    for (const t of collections.statuses.values()) if (t.isDone&&t.isPending) error('status','状态 '+t.id+' 不能同时设为已完成和待决');
+    for (const t of collections.statuses.values()) if (t.isDone&&t.isPending) error('status','状态 '+t.id+' 不能同时设为已完成和搁置');
     for (const t of collections.views.values()) {
       if (!['chain','network','board','timeline'].includes(t.id)) error('view','不支持的视图类型：'+t.id);
       if (typeof t.enabled!=='boolean') error('shape','视图 '+t.id+' 的 enabled 必须为布尔值');

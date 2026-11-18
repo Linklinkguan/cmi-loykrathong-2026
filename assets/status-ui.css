@@ -1,0 +1,120 @@
+/* v9.1 状态标签、状态多选筛选、卡片状态样式、手机顶部。颜色来自 status-ui.js（--st-fg / --st-bg / --st-line / --st-tone）。 */
+:root{--held-a:#EFECE6;--held-b:#F7F5F1;--held-bar:#A8A29A;--held-dash:#B5AFA6;--held-num:#5E5A55;--done-title:#857B6D;--progress-green:#3E7B4A}
+.status-badge{display:inline-flex;align-items:center;gap:2px;flex:none;font-size:10.5px;line-height:15px;font-weight:700;padding:0 5px;border-radius:4px;background:var(--st-bg);color:var(--st-fg);border:1px solid var(--st-line);white-space:nowrap;letter-spacing:0;font-style:normal}
+.status-badge i{font-style:normal;font-size:9.5px;line-height:1;margin-right:1px}
+.status-pill-v9{font-size:11px;line-height:18px;padding:0 7px}
+.task-top .status-badge{margin-right:1px}
+.compact-card .task-meta .status-badge{order:-1}
+/* 已完成：底色变淡、次要信息变淡、右上角绿勾；标题不浅于 #8C8274（实际 #857B6D），卡片本身不用透明度 */
+.task-card.st-done{background:color-mix(in srgb,var(--card-bg,#fcefd3) 40%,#fff)}
+.task-card.st-done .task-title{color:var(--done-title)}
+.task-card.st-done .task-id{color:var(--done-title)}
+.task-card.st-done .task-meta>:not(.status-badge),.task-card.st-done .task-tags,.task-card.st-done .task-bottom,.task-card.st-done .task-top>:not(.status-badge):not(.task-id){opacity:.6}
+.task-card.st-done::after{content:'✓';position:absolute;top:3px;right:4px;width:15px;height:15px;border-radius:50%;background:#3F7A4B;color:#fff;font-size:10px;line-height:15px;text-align:center;font-weight:900;pointer-events:none}
+.task-card.st-done .task-head,.task-card.st-done .task-top{padding-right:16px}
+/* 搁置：中性灰斜纹（#EFECE6／#F7F5F1，各 6px）、左竖条 #A8A29A、虚线边 #B5AFA6；标题保持深色 */
+.task-card.st-held{background:repeating-linear-gradient(135deg,var(--held-a) 0 6px,var(--held-b) 6px 12px);border-left-color:var(--held-bar);border-top:1px dashed var(--held-dash);border-right:1px dashed var(--held-dash);border-bottom:1px dashed var(--held-dash)}
+.task-card.st-held .task-title{color:#3A2E25}
+.task-card.st-doing{box-shadow:inset 0 0 0 1px #4a5fb840}
+/* 原红色角标不再显示（由「搁置」标签和灰色斜纹取代） */
+.task-card .pending-corner{display:none}
+/* 「搁置」数量不再用红色 */
+.stat.pending .stat-number{color:var(--held-num)!important}
+.toggle-count b{color:inherit!important}
+/* 状态筛选组：符号与卡片标签一致（○ ▶ ✓ ‖）；未选＝白底描边，选中＝整颗填色 */
+.status-bar{display:flex;align-items:center;gap:4px;flex-wrap:nowrap;min-width:0}
+.status-bar-label{font-size:11px;color:#7d6957;font-weight:600;margin-right:1px;white-space:nowrap}
+.status-chip{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;gap:3px;height:21px;padding:0 6px 0 5px;border-radius:5px;border:1px solid var(--st-tone,#c9b49a);background:#fffdf9;color:var(--st-tone,#4a3a2d);font-size:11px;font-weight:600;white-space:nowrap;cursor:pointer}
+.status-chip i{font-style:normal;font-size:9.5px;line-height:1;font-weight:800}
+.status-held i{letter-spacing:-1px}
+.status-chip b{font-weight:800;font-size:10.5px;opacity:.75;margin-left:1px}
+.status-chip.is-on{background:var(--st-tone);color:#fff;border-color:var(--st-tone);box-shadow:0 1px 0 #0002;font-weight:700}
+.status-chip.is-on b{opacity:.95}
+.status-chip.status-held:not(.is-on){background:repeating-linear-gradient(135deg,var(--held-a) 0 6px,var(--held-b) 6px 12px)}
+.status-chip:hover{filter:brightness(.97)}
+.status-chip:focus-visible,.status-clear:focus-visible,.quick-unassigned:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.status-clear{all:unset;box-sizing:border-box;height:21px;padding:0 6px;border-radius:5px;font-size:11px;color:#6f5c4c;border:1px dashed #cdbba5;cursor:pointer;white-space:nowrap}
+@media(min-width:801px){.sticky-top .filter-context{display:flex;align-items:center;gap:8px}.sticky-top .filter-context>.context-toggle{flex:1 1 auto;width:auto;min-width:0}.sticky-top .filter-context>.context-search{flex:none;max-width:30%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;padding:0}
+  .mobile-view-controls,.filter-conditions,.top-progress,.quick-unassigned{display:none!important}}
+.filter-context .status-bar-desk{flex:none}
+.status-head-held{background-image:repeating-linear-gradient(135deg,var(--held-a) 0 6px,var(--held-b) 6px 12px)}
+.mobile-status-heading span.status-badge{font-size:11px;color:var(--st-fg)}
+@media(max-width:1023px) and (min-width:801px){.status-bar-label{display:none}.status-chip{padding:0 5px 0 4px}}
+/* ---- 手机顶部（≤800px）：标题栏（下滚收起）＋第一行 4 颗状态按钮和「筛选 · n」＋（有其他筛选时）一行条件小字＋第二行视图标签／图例／搜索＋3px 进度线 ---- */
+@media(max-width:800px){
+  #stats{display:none!important}
+  body.top-collapsed .sticky-top .topbar,body.top-collapsed .sticky-top .preview-banner{display:none!important}
+  .sticky-top .filter-context{display:flex!important;align-items:center;gap:4px;height:44px!important;min-height:0;padding:4px 12px!important;background:var(--paper)!important;border-bottom:0}
+  .sticky-top .filter-context .status-bar-desk{display:flex;flex:1 1 auto;order:0;gap:4px;min-width:0}
+  .sticky-top .status-bar-desk .status-bar-label,.sticky-top .status-bar-desk .status-clear{display:none}
+  .sticky-top .status-bar-desk .status-chip{flex:1 1 auto;min-width:0;height:36px;font-size:13px;justify-content:center;padding:0 5px;gap:2px;border-radius:7px}
+  .sticky-top .status-bar-desk .status-chip b{font-size:12px}
+  .sticky-top .status-bar-desk .status-chip i{font-size:10.5px}
+  .sticky-top .filter-context>#toggle-filters{order:1;flex:none!important;width:auto!important;height:36px!important;padding:0!important;display:flex;align-items:center}
+  .sticky-top #toggle-filters .context-line,.sticky-top #toggle-filters .toggle-count,.sticky-top #toggle-filters .active-filter-count{display:none!important}
+  .sticky-top #toggle-filters .context-tail{display:flex!important}
+  .sticky-top #filter-toggle-label{display:inline-flex;align-items:center;height:36px;padding:0 7px;border:1px solid #d9c5ac;border-radius:7px;background:#fffdf8;color:#5a4636;font-size:13px;font-weight:600;white-space:nowrap}
+  .sticky-top #filter-toggle-label.has-count{background:#5a4636;color:#fff;border-color:#5a4636}
+  .sticky-top #toggle-filters[aria-expanded="true"] #filter-toggle-label{outline:2px solid #5a463655}
+  .sticky-top .filter-context>.context-search{display:none!important}
+  /* 费用视图没有状态按钮：整行显示费用筛选条件（沿用 v8 行为） */
+  .expense-mode .sticky-top .filter-context>#toggle-filters{flex:1 1 auto!important;min-width:0;gap:6px;justify-content:space-between}
+  .expense-mode .sticky-top #toggle-filters .context-line{display:block!important;flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left;font-weight:600;color:#5a4636}
+  .filter-conditions{margin:0 -12px;padding:0 12px;height:20px;line-height:20px;font-size:11px;font-weight:600;color:#5a4636;background:#f0e6d6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .filter-conditions[hidden]{display:none}
+  .sticky-top .view-nav{display:flex!important;flex-wrap:nowrap!important;align-items:center;gap:6px;margin:0!important;padding:0;border-bottom:1px solid #decebb;min-height:0}
+  .sticky-top .view-nav .tabs{flex:1 1 auto;min-width:0;width:auto!important;overflow-x:auto;scrollbar-width:none;flex-wrap:nowrap!important;justify-content:flex-start;gap:9px!important;border-bottom:0!important}
+  .sticky-top .view-nav .tab{flex:none!important;min-height:38px!important;padding:6px 1px!important;font-size:12.5px!important}
+  .sticky-top .view-nav .nav-tools{flex:none;width:auto!important;padding:0!important;gap:5px;flex-wrap:nowrap!important}
+  .sticky-top .view-nav .view-controls{display:none!important}
+  .sticky-top .view-nav .legend-toggle{height:32px}
+  .sticky-top .view-nav .search:not(.has-value):not(:focus-within){flex:none!important;min-width:0!important;width:34px;height:32px;padding:0 9px}
+  .sticky-top .view-nav .search:not(.has-value):not(:focus-within){position:relative}
+  .sticky-top .view-nav .search:not(.has-value):not(:focus-within) input{position:absolute;inset:0;width:100%!important;padding:0;opacity:0}
+  .sticky-top .view-nav .search:focus-within,.sticky-top .view-nav .search.has-value{flex:none!important;width:150px;height:32px}
+  .top-progress{height:3px;margin:0 -12px;background:#e9e0d3}
+  .top-progress i{display:block;height:100%;background:var(--progress-green);width:0}
+  .mobile-view-controls{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:6px 0 8px}
+  .mobile-view-controls:empty{display:none}
+  .quick-unassigned{all:unset;box-sizing:border-box;grid-column:1/-1;display:flex;align-items:center;gap:6px;height:38px;padding:0 12px;border:1px solid #d9c5ac;border-radius:8px;background:#fffdf8;color:#5a4636;font-size:13px;font-weight:600;cursor:pointer}
+  .quick-unassigned b{margin-left:auto;font-size:13px}
+  .quick-unassigned .chip-box{width:13px;height:13px;border:1px solid #8c7867;border-radius:3px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;color:#fff}
+  .quick-unassigned.is-on{background:#5a4636;color:#fff;border-color:#5a4636}
+  .quick-unassigned.is-on .chip-box{border-color:#fff}
+  .compact-card .task-meta .status-badge{font-size:11px;line-height:16px}
+  .task-card.st-done::after{width:16px;height:16px;line-height:16px;font-size:11px}
+}
+.expense-mode .status-bar,.expense-mode .filter-conditions,.expense-mode .top-progress{display:none!important}
+/* ---- 管理后台 ---- */
+.admin-status-field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.admin-status-field>span{font-size:10px;color:var(--muted)}
+.admin-status-bar{height:36px;flex-wrap:nowrap}
+.admin-status-bar .status-chip{height:30px;font-size:12px;padding:0 8px 0 7px}
+.admin-status-bar .status-clear{height:30px;line-height:28px}
+#tab-tasks .table-toolbar{flex-wrap:wrap}
+.admin-filter-summary{flex-basis:100%;margin:-4px 0 0;font-size:12px;font-weight:600;color:#5a4636;background:#f0e6d6;border-radius:6px;padding:5px 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.summary-item.warning strong{color:var(--held-num)!important}
+.tasks-table tr.st-done .task-table-title,.tasks-table tr.st-done .task-table-id{color:var(--done-title)}
+.tasks-table tr.st-done .task-table-description,.tasks-table tr.st-done td:nth-child(n+4):not(:last-child){opacity:.6}
+.tasks-table tr.st-held{background:repeating-linear-gradient(135deg,var(--held-a) 0 6px,var(--held-b) 6px 12px)}
+.row-check{display:inline-flex;width:15px;height:15px;border-radius:50%;background:#3F7A4B;color:#fff;font-size:10px;line-height:15px;justify-content:center;margin-right:4px;font-weight:900}
+.inline-status{font-weight:700;border:1px solid var(--st-line)!important;background:var(--st-bg)!important;color:var(--st-fg)!important;border-radius:6px}
+.inline-status option{background:#fff;color:#3a2e25}
+@media(max-width:650px){
+  #tab-tasks .table-toolbar{grid-template-columns:1fr 132px}
+  #tab-tasks .table-toolbar .search-label{grid-column:auto}
+  .admin-status-field{grid-column:1/-1;order:2}
+  .admin-status-field>span{display:none}
+  .admin-status-bar{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));height:auto;gap:5px}
+  .admin-status-bar .status-chip{height:36px;justify-content:center;padding:0 3px;font-size:13px}
+  .admin-status-bar .status-clear{display:none}
+  #tab-tasks .table-toolbar .table-count{order:3}
+  .admin-filter-summary{grid-column:1/-1;order:4;margin:0;white-space:normal}
+  .tasks-table tr.st-held{border:1px dashed var(--held-dash);border-left:4px solid var(--held-bar)}
+}
+/* 窄卡片（桌面泳道看板列宽约 130px）：标签去掉符号、收紧内边距 */
+@container (max-width:230px){
+  .compact-card .task-meta .status-badge{padding:0 3px;font-size:10px;line-height:14px}
+  .compact-card .task-meta .status-badge i{display:none}
+  .compact-card .task-meta{gap:2px 4px}
+}

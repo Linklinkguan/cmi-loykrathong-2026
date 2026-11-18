@@ -4,7 +4,7 @@
   const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const clone=value=>JSON.parse(JSON.stringify(value));
   const DRAFT_KEY='cmi-board-draft-v3';
-  const state={board:null,dirty:false,activeTab:'tasks',search:'',status:'',executor:'',frameworkKind:'threads',editingTask:null,taskOriginal:null,editingEntity:null,entityOriginal:null,advancedDirty:false,repairOnly:false};
+  const state={board:null,dirty:false,activeTab:'tasks',search:'',statuses:[],executor:'',frameworkKind:'threads',editingTask:null,taskOriginal:null,editingEntity:null,entityOriginal:null,advancedDirty:false,repairOnly:false};
   const collectionNames={threads:'线索标签',categories:'范畴',statuses:'状态',people:'执行人',stages:'阶段与日期',layers:'任务层',locations:'执行地点',views:'视图配置'};
   const colorNames={paper:'页面底色',surface:'表面底色',white:'卡片白色',ink:'主要文字',muted:'辅助文字',brown:'主按钮',line:'边框',accent:'强调／下游',green:'前置／上游',sameTag:'同线索'};
   const metaFields=[['title','导航标题'],['heroTitle','总览标题'],['event.name','活动名称'],['event.date','活动日期','date'],['event.venue','活动场地'],['event.city','城市'],['event.startTime','开始时间','time'],['event.endTime','结束时间','time'],['event.bonfire','篝火安排'],['event.attendees','人数说明'],['event.fee','费用说明']];
@@ -24,7 +24,7 @@
   }
   function renderSummary(){
     const b=state.board, pending=new Set(b.framework.statuses.filter(s=>s.isPending).map(s=>s.id));
-    const stats=[['全部任务',b.tasks.length],['待决事项',b.tasks.filter(t=>pending.has(t.status)).length,'warning'],['无执行人',b.tasks.filter(t=>!t.executor.length).length],['依赖关系',b.tasks.reduce((n,t)=>n+t.pre.length,0)],['线索标签',b.framework.threads.length]];
+    const stats=[['全部任务',b.tasks.length],[(b.framework.statuses.find(s=>s.isPending)?.name||'搁置'),b.tasks.filter(t=>pending.has(t.status)).length,'warning'],['无执行人',b.tasks.filter(t=>!t.executor.length).length],['依赖关系',b.tasks.reduce((n,t)=>n+t.pre.length,0)],['线索标签',b.framework.threads.length]];
     $('#admin-summary').innerHTML=stats.map(([name,value,cls])=>`<div class="summary-item ${cls||''}"><span>${name}</span><strong>${value}</strong></div>`).join('');
     $('#board-title').textContent=b.meta.title;
     $('#data-state').textContent=state.dirty?'本地修改 · 尚未部署':'已读取站点数据';$('#data-state').classList.toggle('dirty',state.dirty);
@@ -33,17 +33,27 @@
   function renderAll(){
     if(!state.board||state.repairOnly)return;
     renderSummary();
-    $('#admin-filter-status').innerHTML=options(state.board.framework.statuses,state.status,'全部状态');
     $('#admin-filter-executor').innerHTML='<option value="">全部执行人</option><option value="__none__" '+(state.executor==='__none__'?'selected':'')+'>无执行人</option>'+options(state.board.people,state.executor);
     renderTable();renderFramework();renderSettings();setValidation(boardErrors(state.board));
     if(state.activeTab==='advanced'&&!state.advancedDirty)$('#json-editor').value=JSON.stringify(state.board,null,2);
     $('#add-task').disabled=false;
   }
+  // v9：状态多选筛选（显示名、颜色在 status-ui.js 配置）
+  function renderStatusChips(){
+    const st=state.board.framework.statuses,ids=new Set(st.map(x=>x.id));state.statuses=state.statuses.filter(id=>ids.has(id));
+    const counts=Object.fromEntries(st.map(x=>[x.id,state.board.tasks.filter(t=>t.status===x.id).length]));
+    $('#admin-filter-status').innerHTML=StatusUI.chips(st,state.statuses,counts,'data-admin-status')+(state.statuses.length?'<button type="button" class="status-clear" data-admin-status-clear>全部</button>':'');
+  }
   function renderTable(){
-    const tasks=state.board.tasks.filter(t=>(!state.status||t.status===state.status)&&(!state.executor||(state.executor==='__none__'?!t.executor.length:t.executor.includes(state.executor)))&&(!state.search||`${t.id} ${t.title} ${t.description}`.toLowerCase().includes(state.search.toLowerCase())));
+    renderStatusChips();
+    const tasks=state.board.tasks.filter(t=>(!state.statuses.length||state.statuses.includes(t.status))&&(!state.executor||(state.executor==='__none__'?!t.executor.length:t.executor.includes(state.executor)))&&(!state.search||`${t.id} ${t.title} ${t.description}`.toLowerCase().includes(state.search.toLowerCase())));
     $('#table-count').textContent=`显示 ${tasks.length} / ${state.board.tasks.length} 项`;
+    {const st=state.board.framework.statuses,parts=[StatusUI.summary(st,state.statuses)||'全部状态'];
+    parts.push(state.executor?'执行人：'+(state.executor==='__none__'?'无执行人':(state.board.people.find(p=>p.id===state.executor)?.name||state.executor)):'全部执行人');
+    if(state.search)parts.push('搜索：'+state.search);
+    const text='当前筛选：'+parts.join(' · ');const el=$('#admin-filter-summary');el.textContent=text;el.title=text;}
     $('#table-empty').hidden=!!tasks.length;
-    $('#task-table-body').innerHTML=tasks.map(t=>`<tr data-task-row="${esc(t.id)}"><td class="task-table-id">${esc(t.id)}</td><td><div class="task-table-title">${esc(t.title)}</div><div class="task-table-description">${esc(t.description)}</div></td><td><select class="inline-status" data-inline-status="${esc(t.id)}" aria-label="${esc(t.id)} 状态">${options(state.board.framework.statuses,t.status)}</select></td><td><div class="owner-pills">${t.executor.length?t.executor.map(id=>{const p=state.board.people.find(p=>p.id===id);return `<span class="owner-pill" style="--person-color:${p.color}">${esc(p.name)}</span>`}).join(''):'<span class="owner-none">无执行人</span>'}</div></td><td>${esc(t.date)}${t.timeHint?'<br><small>'+esc(t.timeHint)+'</small>':''}</td><td>${t.pre.length?t.pre.map(esc).join('、'):'—'}</td><td><div class="row-actions"><button data-edit-task="${esc(t.id)}">编辑</button><button class="danger" data-delete-task="${esc(t.id)}">删除</button></div></td></tr>`).join('');
+    $('#task-table-body').innerHTML=tasks.map(t=>{const si=StatusUI.info(t.status,state.board.framework.statuses);return `<tr data-task-row="${esc(t.id)}" class="st-${si.kind}"><td class="task-table-id">${si.kind==='done'?'<span class="row-check" aria-hidden="true">✓</span>':''}${esc(t.id)}</td><td><div class="task-table-title">${esc(t.title)}</div><div class="task-table-description">${esc(t.description)}</div></td><td><select class="inline-status status-${si.kind}" style="--st-fg:${si.fg};--st-bg:${si.bg};--st-line:${si.line}" data-inline-status="${esc(t.id)}" aria-label="${esc(t.id)} 状态：${esc(si.label)}">${state.board.framework.statuses.map(x=>`<option value="${esc(x.id)}" ${x.id===t.status?'selected':''}>${esc(StatusUI.info(x.id,state.board.framework.statuses).mark.replace('\uFE0E','')+' '+(x.name||x.id))}</option>`).join('')}</select></td><td><div class="owner-pills">${t.executor.length?t.executor.map(id=>{const p=state.board.people.find(p=>p.id===id);return `<span class="owner-pill" style="--person-color:${p.color}">${esc(p.name)}</span>`}).join(''):'<span class="owner-none">无执行人</span>'}</div></td><td>${esc(t.date)}${t.timeHint?'<br><small>'+esc(t.timeHint)+'</small>':''}</td><td>${t.pre.length?t.pre.map(esc).join('、'):'—'}</td><td><div class="row-actions"><button data-edit-task="${esc(t.id)}">编辑</button><button class="danger" data-delete-task="${esc(t.id)}">删除</button></div></td></tr>`}).join('');
   }
   function taskCandidates(){const b=clone(state.board),index=b.tasks.findIndex(t=>t.id===state.taskOriginal);if(index<0)b.tasks.push(clone(state.editingTask));else b.tasks[index]=clone(state.editingTask);return b}
   function multiSelect(field,items,selected){return `<details class="multiselect" id="task-${field}-dropdown"><summary><span>${selected.length?'已选 '+selected.length+' 项':'未选择'}</span></summary>${field==='pre'?'<div class="multi-search"><input data-multi-search="pre" type="search" placeholder="搜索任务编号或标题" aria-label="查找前置任务"></div>':''}<div class="multi-options">${items.map(item=>`<label data-option-text="${esc((item.id+' '+(item.title||item.name||'')).toLowerCase())}"><input type="checkbox" data-multi="${field}" value="${esc(item.id)}" ${selected.includes(item.id)?'checked':''}><span>${esc(field==='pre'?item.id+' · '+item.title:item.name||item.id)}</span></label>`).join('')||'<span class="help">暂无可选条目</span>'}</div></details>`}
@@ -155,7 +165,7 @@
   function renderFramework(){
     const kind=state.frameworkKind,items=collection(kind);
     $('#add-framework').disabled=kind==='views'&&items.length>=4;
-    $('#framework-list').innerHTML=items.map(item=>`<article class="framework-card" style="--item-color:${item.color||'#a78b67'}"><header><h4>${esc(item.name)}</h4><span class="item-id">${esc(item.id)}</span></header>${item.description?'<p>'+esc(item.description)+'</p>':''}<div class="meta">${kind==='statuses'?(item.isDone?'计入已完成':item.isPending?'计入待决':'普通状态'):kind==='people'?'别名：'+esc(item.aliases.join('、')||'无'):kind==='stages'?esc(item.date):kind==='views'?(item.enabled?'已启用':'已停用'):item.color?esc(item.color):'可配置条目'}</div><footer><button data-edit-framework="${esc(item.id)}">编辑</button><button class="danger" data-delete-framework="${esc(item.id)}">删除</button></footer></article>`).join('')||'<p class="help">暂无条目，可新增。</p>';
+    $('#framework-list').innerHTML=items.map(item=>`<article class="framework-card" style="--item-color:${item.color||'#a78b67'}"><header><h4>${esc(item.name)}</h4><span class="item-id">${esc(item.id)}</span></header>${item.description?'<p>'+esc(item.description)+'</p>':''}<div class="meta">${kind==='statuses'?(item.isDone?'计入已完成':item.isPending?'计入搁置':'普通状态'):kind==='people'?'别名：'+esc(item.aliases.join('、')||'无'):kind==='stages'?esc(item.date):kind==='views'?(item.enabled?'已启用':'已停用'):item.color?esc(item.color):'可配置条目'}</div><footer><button data-edit-framework="${esc(item.id)}">编辑</button><button class="danger" data-delete-framework="${esc(item.id)}">删除</button></footer></article>`).join('')||'<p class="help">暂无条目，可新增。</p>';
   }
   function newEntity(kind){const base={id:'',name:'待补充'};if(['threads','categories','statuses','people','layers','locations'].includes(kind))base.color='#8A765D';if(kind==='threads')base.description='待补充';if(kind==='people')base.aliases=[];if(kind==='categories'||kind==='locations')base.icon=Object.keys(state.board.framework.icons)[0];if(kind==='statuses'){base.isDone=false;base.isPending=false;}if(kind==='stages')base.date=state.board.meta.event.date;if(kind==='layers')base.background='#EFE7DA';if(kind==='views'){base.id=['chain','network','board','timeline'].find(id=>!collection(kind).some(v=>v.id===id))||'';base.icon=base.id;base.description='待补充';base.mobileDescription='待补充';base.enabled=true;}return base}
   function fieldHtml(key,label,value,type='text',wide=false){return `<label class="${wide?'span-two':''}"><span>${label}</span>${type==='textarea'?`<textarea id="framework-${key}" name="${key}" rows="3">${esc(value)}</textarea>`:type==='color'?`<div class="color-field-row"><input type="color" data-color-target="framework-${key}" value="${esc(value)}" aria-label="${label}取色"><input id="framework-${key}" name="${key}" value="${esc(value)}" pattern="#[0-9A-Fa-f]{6}" required></div>`:`<input id="framework-${key}" name="${key}" type="${type}" value="${esc(value)}" ${key==='id'&&state.entityOriginal?'readonly':''} required>`}</label>`}
@@ -170,7 +180,7 @@
     if('description'in e)html+=fieldHtml('description','说明',e.description,'textarea',true);
     if('mobileDescription'in e)html+=fieldHtml('mobileDescription','手机视图说明',e.mobileDescription,'textarea',true);
     if('aliases'in e)html+=`<label class="span-two"><span>别名（逗号分隔）</span><input id="framework-aliases" name="aliases" value="${esc(e.aliases.join('，'))}"></label>`;
-    for(const [key,label] of [['isDone','计入已完成统计'],['isPending','计入待决统计'],['enabled','启用此视图']])if(key in e)html+=`<label class="check-label"><input type="checkbox" id="framework-${key}" name="${key}" ${e[key]?'checked':''}><span>${label}</span></label>`;
+    for(const [key,label] of [['isDone','计入已完成统计'],['isPending','计入搁置统计'],['enabled','启用此视图']])if(key in e)html+=`<label class="check-label"><input type="checkbox" id="framework-${key}" name="${key}" ${e[key]?'checked':''}><span>${label}</span></label>`;
     $('#framework-fields').innerHTML=html;validateFramework();$('#framework-editor').showModal();$('#framework-editor').scrollTop=0;
   }
   function entityCandidate(){const b=clone(state.board),list=collection(state.frameworkKind,b),index=list.findIndex(item=>item.id===state.entityOriginal);if(index<0)list.push(clone(state.editingEntity));else list[index]=clone(state.editingEntity);return b}
@@ -207,6 +217,8 @@
     document.addEventListener('error',event=>{const img=event.target;if(!img.matches?.('.log-item-images img'))return;const box=document.createElement('span');box.className='admin-thumb-fallback';box.textContent=img.alt||'图片';box.title='图片无法加载：'+(img.alt||'');img.replaceWith(box);},true);
     document.addEventListener('change',event=>{const slot=event.target.closest?.('.img-slot');if(slot&&event.target.matches('.img-file'))slotPreview(slot);});
     document.addEventListener('click',event=>{
+      const stChip=event.target.closest('[data-admin-status]');if(stChip){const id=stChip.dataset.adminStatus,set=new Set(state.statuses);set.has(id)?set.delete(id):set.add(id);state.statuses=StatusUI.ordered(state.board.framework.statuses).filter(x=>set.has(x));renderTable();return;}
+      if(event.target.closest('[data-admin-status-clear]')){state.statuses=[];renderTable();return;}
       const taskEdit=event.target.closest('[data-edit-task]');if(taskEdit){openTask(taskEdit.dataset.editTask);return;}
       const taskDelete=event.target.closest('[data-delete-task]');if(taskDelete){deleteTask(taskDelete.dataset.deleteTask);return;}
       const entityEdit=event.target.closest('[data-edit-framework]');if(entityEdit){openFramework(entityEdit.dataset.editFramework);return;}
@@ -245,7 +257,6 @@
     });
     document.addEventListener('change',event=>{
       const el=event.target;
-      if(el.id==='admin-filter-status'){state.status=el.value;renderTable();}
       if(el.id==='admin-filter-executor'){state.executor=el.value;renderTable();}
       if(el.id==='framework-kind'){state.frameworkKind=el.value;renderFramework();}
       if(el.dataset.inlineStatus){const task=state.board.tasks.find(t=>t.id===el.dataset.inlineStatus);if(task.status!==el.value){task.status=el.value;markChanged();toast(task.id+' 状态已更新到本地草稿。');}}

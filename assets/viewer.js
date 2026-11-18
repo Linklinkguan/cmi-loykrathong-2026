@@ -12,7 +12,8 @@ const statusMap=new Map(F.statuses.map(x=>[x.id,x]));
 const categoryName=id=>categoryMap.get(id)?.name||id;
 const threadName=id=>threadConfigMap.get(id)?.name||id;
 const personName=id=>personMap.get(id)?.name||id;
-const statusName=id=>statusMap.get(id)?.name||id;
+const statusInfo=id=>StatusUI.info(id,F.statuses);
+const statusName=id=>statusInfo(id).label;
 const layerName=id=>F.layers.find(x=>x.id===id)?.name||id;
 const locationName=id=>F.locations.find(x=>x.id===id)?.name||id;
 const isPending=id=>statusMap.get(id)?.isPending===true;
@@ -40,12 +41,17 @@ const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;',
 const ICONS=BOARD.framework.icons;
 const icon = (name,size=16) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${BoardCore.safeIconMarkup(ICONS[name] || ICONS.info || '')}</svg>`;
 const PALETTE={layers:Object.fromEntries(F.layers.map(x=>[x.id,[x.color,x.background]])),aspects:Object.fromEntries(F.categories.map(x=>[x.id,x.color])),locations:Object.fromEntries(F.locations.map(x=>[x.id,[x.color,x.icon]]))};
-const STATUSES=F.statuses.map(x=>x.id);
+const STATUSES=StatusUI.ordered(F.statuses);
+const PENDING_ID=F.statuses.find(x=>x.isPending)?.id||'';
+const statusCounts=()=>Object.fromEntries(STATUSES.map(id=>[id,DATA.tasks.filter(t=>t.status===id).length]));
+const shownStatuses=()=>state.filters.status.length?STATUSES.filter(id=>state.filters.status.includes(id)):STATUSES;
+const statusClass=t=>'st-'+statusInfo(t.status).kind;
+const statusBadge=t=>StatusUI.badge(t.status,F.statuses);
 const DAY_INFO=Object.fromEntries(DATA.dates.map(date=>[date,[weekday(date),F.stages.find(stage=>stage.date===date)?.name||'待补充']]));
 const VIEWS=[...F.views.filter(v=>v.enabled),{id:'expenses',name:'费用',icon:'money',description:'逐项记录采购与改动，按付款人、类目核对支出。'}];
 const VIEW_INFO=Object.fromEntries(VIEWS.map(v=>[v.id,[v.name,v.description]]));
 
-const state = {view:Object.keys(VIEW_INFO)[0],filters:{participant:'',assignee:'',aspect:'',date:'',tag:'',pending:''},search:'',networkGroup:'aspect',boardGroup:'assignee',selectedId:null,mobile:window.matchMedia('(max-width:800px)').matches,filtersOpen:false,zoom:{chain:1,network:1,board:1,timeline:1}};
+const state = {view:Object.keys(VIEW_INFO)[0],filters:{participant:'',assignee:'',aspect:'',date:'',tag:'',status:[]},search:'',networkGroup:'aspect',boardGroup:'assignee',selectedId:null,mobile:window.matchMedia('(max-width:800px)').matches,filtersOpen:false,zoom:{chain:1,network:1,board:1,timeline:1}};
 // V5：桌面三栏面板收起状态、手机单栏／画布模式（只存在本机浏览器）
 const UI_KEY='lkboard.layout.v5';
 const UI_DEFAULT={stats:false,filters:false,detail:false,mobileCanvas:false};
@@ -105,15 +111,14 @@ function init(){
   {const line=[`${Number(month)}月${Number(day)}日 ${DATA.event.startTime}–${DATA.event.endTime}`,DATA.event.venue,DATA.event.fee].filter(Boolean).join(' · ');const el=$('#nav-event-line');el.textContent=line;el.title=line+'（点按展开／收起）';el.setAttribute('aria-label','活动信息：'+line);}$('#nav-calendar strong').textContent=Number(day);$('#nav-calendar span').innerHTML=$('.calendar-tile span').innerHTML;$('#nav-calendar').title=`${DATA.event.name} · ${Number(month)} 月 ${Number(day)} 日`;
   const pending=DATA.tasks.filter(t=>isPending(t.status)).length, unassigned=DATA.tasks.filter(t=>!t.assignees.length).length, completed=DATA.tasks.filter(t=>isDone(t.status)).length;
   const percent=DATA.tasks.length?Math.round(completed/DATA.tasks.length*100):0;
-  $('#stats').innerHTML=`<div class="stat"><div class="stat-label">全部任务</div><div class="stat-number">${DATA.tasks.length}<small>项筹备与执行</small></div></div><button class="stat pending" data-action="filter-pending"><div class="stat-label">待决事项 ${icon('arrow',12)}</div><div class="stat-number">${pending}<small>项需确认</small></div></button><button class="stat" data-action="filter-unassigned"><div class="stat-label">无执行人 ${icon('arrow',12)}</div><div class="stat-number">${unassigned}<small>项</small></div></button><div class="stat"><div class="stat-label">已完成</div><div class="stat-number">${completed}<small>项</small><em class="stat-pct">${percent}%</em></div></div><div class="stat"><div class="stat-progress"><span class="stat-label">整体完成进度 · ${completed} / ${DATA.tasks.length}</span><strong>${percent}<span style="font-size:14px;font-weight:400">%</span></strong></div><div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}" aria-label="任务完成率"><i style="width:${percent}%"></i></div></div>`;
+  $('#stats').innerHTML=`<div class="stat"><div class="stat-label">全部任务</div><div class="stat-number">${DATA.tasks.length}<small>项筹备与执行</small></div></div><button class="stat pending" data-action="filter-pending"><div class="stat-label">${esc(statusName(PENDING_ID))} ${icon('arrow',12)}</div><div class="stat-number">${pending}<small>项</small></div></button><button class="stat" data-action="filter-unassigned"><div class="stat-label">无执行人 ${icon('arrow',12)}</div><div class="stat-number">${unassigned}<small>项</small></div></button><div class="stat"><div class="stat-label">已完成</div><div class="stat-number">${completed}<small>项</small><em class="stat-pct">${percent}%</em></div></div><div class="stat"><div class="stat-progress"><span class="stat-label">整体完成进度 · ${completed} / ${DATA.tasks.length}</span><strong>${percent}<span style="font-size:14px;font-weight:400">%</span></strong></div><div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}" aria-label="任务完成率"><i style="width:${percent}%"></i></div></div>`;
   const participants=[...new Set(DATA.tasks.flatMap(t=>t.participants))].sort((a,b)=>a.localeCompare(b,'zh-CN'));
   options('filter-participant',participants,'全部参与者');
   options('filter-assignee',[['assigned','有执行人'],['unassigned','无执行人'],...DATA.people.map(id=>[id,personName(id)])],'全部执行人');
   options('filter-aspect',DATA.aspects.map(id=>[id,categoryName(id)]),'全部方面');
   options('filter-date',DATA.dates.map(d=>[d,shortDate(d)+' · '+DAY_INFO[d][0]]),'全部日期');
   options('filter-tag',DATA.tags.map(t=>[t.name,t.label]),'全部标签');
-  options('filter-pending',[['pending','仅待决'],['other','非待决']],'全部事项');
-  $('#legend').innerHTML=`<span class="legend-item legend-label">色条</span>${Object.entries(PALETTE.layers).map(([k,v])=>`<span class="legend-item"><i class="swatch" style="background:${v[0]}"></i>${esc(layerName(k))}层</span>`).join('')}<i class="divider"></i>${Object.entries(PALETTE.locations).map(([k,v])=>`<span class="legend-item" style="color:${v[0]}">${icon(v[1],12)}${esc(locationName(k))}</span>`).join('')}<i class="divider"></i><span class="legend-item"><i class="pending-mark"></i>待决</span><span class="legend-item"><span class="tag" style="--tag-color:#9b7f63">线索</span>标签</span><span class="legend-item legend-log"><span class="log-mark" aria-hidden="true">${icon('clock',10)}</span>有进度记录</span>`;
+  $('#legend').innerHTML=`<span class="legend-item legend-label">色条</span>${Object.entries(PALETTE.layers).map(([k,v])=>`<span class="legend-item"><i class="swatch" style="background:${v[0]}"></i>${esc(layerName(k))}层</span>`).join('')}<i class="divider"></i>${Object.entries(PALETTE.locations).map(([k,v])=>`<span class="legend-item" style="color:${v[0]}">${icon(v[1],12)}${esc(locationName(k))}</span>`).join('')}<i class="divider"></i><span class="legend-item legend-label">状态</span>${STATUSES.map(id=>`<span class="legend-item">${StatusUI.badge(id,F.statuses)}</span>`).join('')}<i class="divider"></i><span class="legend-item"><span class="tag" style="--tag-color:#9b7f63">线索</span>标签</span><span class="legend-item legend-log"><span class="log-mark" aria-hidden="true">${icon('clock',10)}</span>有进度记录</span>`;
   $('#validation-status').innerHTML='<i></i>依赖已校验 · 无悬空 · 无环';
   const hash=location.hash.slice(1);if(VIEW_INFO[hash])state.view=hash;
   bindEvents();render();
@@ -127,12 +132,11 @@ function getVisible(){return DATA.tasks.filter(t=>{
   if(f.aspect&&t.aspect!==f.aspect)return false;
   if(f.date&&t.date!==f.date)return false;
   if(f.tag&&!t.tags.includes(f.tag))return false;
-  if(f.pending==='pending'&&!isPending(t.status))return false;
-  if(f.pending==='other'&&isPending(t.status))return false;
+  if(f.status.length&&!f.status.includes(t.status))return false;
   if(state.search&&!`${t.id} ${t.title} ${t.description} ${t.notes} ${t.participants.join(' ')}`.toLocaleLowerCase().includes(state.search.toLocaleLowerCase()))return false;
   return true;
 })}
-function resetFilters(){state.filters={participant:'',assignee:'',aspect:'',date:'',tag:'',pending:''};state.search='';state.selectedId=null;relation=emptyRelations();$$('[data-filter]').forEach(s=>s.value='');$('#search-input').value='';render()}
+function resetFilters(){state.filters={participant:'',assignee:'',aspect:'',date:'',tag:'',status:[]};state.search='';state.selectedId=null;relation=emptyRelations();$$('[data-filter]').forEach(s=>s.value='');$('#search-input').value='';render()}
 function tagHtml(name){const tag=tagMap.get(name);return `<span class="tag" style="--tag-color:${tag.color}" title="${esc(tag.description)}">${esc(tag.label)}</span>`}
 function ownerHtml(t,compact=false,laneOwner=null){
   if(laneOwner==='__unassigned__'&&!t.assignees.length)return '';
@@ -164,7 +168,7 @@ function taskCard(t,kind='regular',pos=null,laneOwner=null){
   const [color,bg]=PALETTE.layers[t.layer], [locColor,locIcon]=PALETTE.locations[t.location];
   const style=`--layer-color:${color};--card-bg:${bg};`+(pos?`left:${pos.x}px;top:${pos.y}px;width:${pos.w}px;height:${pos.h}px;`:'');
   const tagLimit=pos?2:3; const tags=t.tags.slice(0,tagLimit).map(tagHtml).join('');
-  return `<button class="task-card ${pos?'graph-node':''} ${kind==='network'?'network-node':''} ${isPending(t.status)?'is-pending':''}" style="${style}" data-task="${esc(t.id)}" data-relation="${relationFor(t.id)}" ${relationshipAttributes(t.id)} aria-label="${esc(t.id+' '+t.title+'，'+statusName(t.status)+'，'+(t.assignees.map(personName).join('、')||'无执行人'))}" title="${esc(t.title)}">${isPending(t.status)?'<span class="pending-corner" aria-hidden="true"></span>':''}<div class="task-top"><span class="task-id">${esc(t.id)}${logDot(t)}</span><span class="layer-label">${esc(layerName(t.layer))}</span><span class="location" style="color:${locColor}">${icon(locIcon,11)}${esc(locationName(t.location))}</span></div><div class="task-title">${esc(t.title)}</div><div class="task-bottom">${ownerHtml(t,true)}<span class="task-time">${esc(kind==='chain'?(t.timeHint||'当天'):shortDate(t.date)+(t.timeHint?' · '+t.timeHint:''))}</span></div><div class="task-tags">${tags}${t.tags.length>tagLimit?`<span class="tag-more">+${t.tags.length-tagLimit}</span>`:''}</div><div class="task-relation-labels">${relationshipLabels(t.id)}</div></button>`;
+  return `<button class="task-card ${pos?'graph-node':''} ${kind==='network'?'network-node':''} ${isPending(t.status)?'is-pending':''} ${statusClass(t)}" data-status="${esc(t.status)}" style="${style}" data-task="${esc(t.id)}" data-relation="${relationFor(t.id)}" ${relationshipAttributes(t.id)} aria-label="${esc(t.id+' '+t.title+'，'+statusName(t.status)+'，'+(t.assignees.map(personName).join('、')||'无执行人'))}" title="${esc(t.title)}"><div class="task-top"><span class="task-id">${esc(t.id)}${logDot(t)}</span>${statusBadge(t)}<span class="layer-label">${esc(layerName(t.layer))}</span><span class="location" style="color:${locColor}">${icon(locIcon,11)}${esc(locationName(t.location))}</span></div><div class="task-title">${esc(t.title)}</div><div class="task-bottom">${ownerHtml(t,true)}<span class="task-time">${esc(kind==='chain'?(t.timeHint||'当天'):shortDate(t.date)+(t.timeHint?' · '+t.timeHint:''))}</span></div><div class="task-tags">${tags}${t.tags.length>tagLimit?`<span class="tag-more">+${t.tags.length-tagLimit}</span>`:''}</div><div class="task-relation-labels">${relationshipLabels(t.id)}</div></button>`;
 }
 function logDot(t){const n=(t.progress_log||[]).length;return n?`<span class="log-mark" title="有 ${n} 条进度记录" aria-label="有 ${n} 条进度记录" role="img">${icon('clock',10)}</span>`:''}
 // v6：紧凑卡片（看板、时间轴、手机单栏）。两行：编号＋标题；执行人·日期·地点·层级·标签。
@@ -172,12 +176,13 @@ function compactCard(t,kind,laneOwner=null){
   const [color,bg]=PALETTE.layers[t.layer], [locColor,locIcon]=PALETTE.locations[t.location];
   const tags=t.tags.slice(0,2).map(tagHtml).join('')+(t.tags.length>2?`<span class="tag-more">+${t.tags.length-2}</span>`:'');
   const time=kind==='chain'?(t.timeHint||'当天'):shortDate(t.date)+(t.timeHint?' '+t.timeHint:'');
-  return `<button class="task-card compact-card ${isPending(t.status)?'is-pending':''}" style="--layer-color:${color};--card-bg:${bg};" data-task="${esc(t.id)}" data-relation="${relationFor(t.id)}" ${relationshipAttributes(t.id)} aria-label="${esc(t.id+' '+t.title+'，'+statusName(t.status)+'，'+(t.assignees.map(personName).join('、')||'无执行人'))}" title="${esc(t.title+' · '+layerName(t.layer)+'层 · '+locationName(t.location))}">${isPending(t.status)?'<span class="pending-corner" aria-hidden="true"></span>':''}<div class="task-head"><span class="task-id">${esc(t.id)}${logDot(t)}</span><span class="task-title">${esc(t.title)}</span></div><div class="task-meta">${ownerHtml(t,true,laneOwner)}<span class="task-time">${esc(time)}</span><span class="location" style="color:${locColor}" title="${esc(locationName(t.location))}">${icon(locIcon,11)}<span class="loc-name">${esc(locationName(t.location))}</span></span><span class="layer-label" title="${esc(layerName(t.layer))}层">${esc(layerName(t.layer))}</span><span class="task-tags">${tags}</span><span class="task-relation-labels">${relationshipLabels(t.id)}</span></div></button>`;
+  return `<button class="task-card compact-card ${isPending(t.status)?'is-pending':''} ${statusClass(t)}" data-status="${esc(t.status)}" style="--layer-color:${color};--card-bg:${bg};" data-task="${esc(t.id)}" data-relation="${relationFor(t.id)}" ${relationshipAttributes(t.id)} aria-label="${esc(t.id+' '+t.title+'，'+statusName(t.status)+'，'+(t.assignees.map(personName).join('、')||'无执行人'))}" title="${esc(t.title+' · '+layerName(t.layer)+'层 · '+locationName(t.location))}"><div class="task-head"><span class="task-id">${esc(t.id)}${logDot(t)}</span><span class="task-title">${esc(t.title)}</span></div><div class="task-meta">${statusBadge(t)}${ownerHtml(t,true,laneOwner)}<span class="task-time">${esc(time)}</span><span class="location" style="color:${locColor}" title="${esc(locationName(t.location))}">${icon(locIcon,11)}<span class="loc-name">${esc(locationName(t.location))}</span></span><span class="layer-label" title="${esc(layerName(t.layer))}层">${esc(layerName(t.layer))}</span><span class="task-tags">${tags}</span><span class="task-relation-labels">${relationshipLabels(t.id)}</span></div></button>`;
 }
 function render(){
   const expensesMode=state.view==='expenses';
   document.body.classList.toggle('expense-mode',expensesMode);
   const compact=state.mobile&&!ui.mobileCanvas;
+  placeNav();
   syncLayout();
   const currentStamp=expensesMode&&expenseView.getData()?expenseView.getData().meta.updatedAt:DATA.event.updatedAt;
   const currentUpdated=new Intl.DateTimeFormat('zh-CN',{timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(currentStamp));
@@ -190,6 +195,7 @@ function render(){
   visibleTasks=getVisible();
   syncFilterSummary();
   syncFilterPanel();
+  syncStatusBar();
   $$('[data-filter]').forEach(el=>el.classList.toggle('is-active',!!el.value));
   $$('[data-tab]').forEach(tab=>{const active=tab.dataset.tab===state.view;tab.setAttribute('aria-selected',String(active));tab.tabIndex=active?0:-1});
   $('#view-panel').setAttribute('aria-labelledby','tab-'+state.view);
@@ -198,7 +204,7 @@ function render(){
   $('#view-description').textContent=VIEW_INFO[state.view][1];
   if(expensesMode){
     $('#view-title').textContent=expenseView.getData()?.meta.title||'费用与支出';
-    $('#view-controls').innerHTML='';$('#focus-bar').hidden=true;
+    $('#view-controls').innerHTML='';$('#mobile-view-controls').innerHTML='';$('#focus-bar').hidden=true;
     const canvas=$('#canvas-scroll');canvas.className='workspace expenses-workspace';
     expenseView.render(canvas);
     $('#result-count').innerHTML=`显示 <b>${expenseView.visible().length}</b> / ${expenseView.getData()?.expenses.length||0} 条`;$('#toggle-count').textContent='';
@@ -215,7 +221,8 @@ function render(){
   if(state.mobile)controls=`<div class="mode-switch" role="group" aria-label="手机查看方式"><button data-action="mobile-mode" data-mode="list" aria-pressed="${!ui.mobileCanvas}">单栏</button><button data-action="mobile-mode" data-mode="canvas" aria-pressed="${ui.mobileCanvas}">画布</button></div>`+controls;
   if(canvasMode())controls+=zoomControls;
   if(!state.mobile&&['chain','network'].includes(state.view))controls+=zoomControls+`<button class="quiet-button icon-only" data-action="scroll-top" title="回到起点" aria-label="回到起点">${icon('reset',13)}</button>`;
-  $('#view-controls').innerHTML=controls;
+  // v9.1：手机上「单栏／画布」和分组放在内容区顶部，不占顶部两行
+  $('#view-controls').innerHTML=state.mobile?'':controls;$('#mobile-view-controls').innerHTML=state.mobile?controls:'';
   const canvas=$('#canvas-scroll');canvas.className='workspace'+(!compact&&['chain','network'].includes(state.view)?' graph':'')+(compact?' mobile-workspace':'')+(canvasMode()?' canvas-mode':'');canvas.scrollTop=0;canvas.scrollLeft=0;
   if(!visibleTasks.length){canvas.innerHTML=`<div class="empty-state"><div class="empty-icon">${icon('search',27)}</div><h3>没有符合条件的任务</h3><p>调整参与者、执行人或其他筛选条件后查看。</p><button class="primary-button" data-action="reset-filters">${icon('reset',14)}清空筛选</button></div>`}
   else if(state.view==='chain')compact?renderMobileChain():renderChain();
@@ -320,10 +327,11 @@ function laneTasks(group,aspect){return visibleTasks.filter(t=>aspect?t.aspect==
 function laneName(group,aspect){return aspect?categoryName(group):group==='__unassigned__'?'无执行人':personName(group)}
 function renderBoard(){
   const aspect=state.boardGroup==='aspect',groups=aspect?DATA.aspects:[...DATA.people,'__unassigned__'];
-  let html=`<div class="board-wrap" style="--status-count:${STATUSES.length};--board-min-width:${20+STATUSES.length*146}px"><div class="board-head"><div class="board-corner">${aspect?'范畴':'执行人'}</div>${STATUSES.map(id=>`<div class="status-head" style="--status-color:${statusMap.get(id).color};--status-bg:${statusMap.get(id).color}20"><span><i class="status-dot"></i>${esc(statusName(id))}</span><span class="column-count">${visibleTasks.filter(t=>t.status===id).length}</span></div>`).join('')}</div>`;
+  const cols=shownStatuses();
+  let html=`<div class="board-wrap" style="--status-count:${cols.length};--board-min-width:${20+cols.length*146}px"><div class="board-head"><div class="board-corner">${aspect?'范畴':'执行人'}</div>${cols.map(id=>`<div class="status-head status-head-${statusInfo(id).kind}" style="--status-color:${statusInfo(id).tone};--status-bg:${statusInfo(id).tone}20"><span><i class="status-dot"></i>${esc(statusName(id))}</span><span class="column-count">${visibleTasks.filter(t=>t.status===id).length}</span></div>`).join('')}</div>`;
   groups.forEach(group=>{
     const tasks=laneTasks(group,aspect),color=aspect?PALETTE.aspects[group]:personMap.get(group)?.color||F.colors.muted;
-    html+=`<div class="board-lane" style="--lane-color:${color}"><div class="lane-label"><span class="lane-name">${esc(laneName(group,aspect))}</span><small>${tasks.length} 项</small></div>${STATUSES.map(id=>{const items=tasks.filter(t=>t.status===id);return `<div tabindex="0" aria-label="${esc(laneName(group,aspect)+' · '+statusName(id)+'，可滚动查看')}" class="lane-cell ${items.length?'':'empty-cell'}">${items.length?items.map(t=>taskCard(t,'regular',null,aspect?null:group)).join(''):'—'}</div>`}).join('')}</div>`;
+    html+=`<div class="board-lane" style="--lane-color:${color}"><div class="lane-label"><span class="lane-name">${esc(laneName(group,aspect))}</span><small>${tasks.length} 项</small></div>${cols.map(id=>{const items=tasks.filter(t=>t.status===id);return `<div tabindex="0" aria-label="${esc(laneName(group,aspect)+' · '+statusName(id)+'，可滚动查看')}" class="lane-cell ${items.length?'':'empty-cell'}">${items.length?items.map(t=>taskCard(t,'regular',null,aspect?null:group)).join(''):'—'}</div>`}).join('')}</div>`;
   });
   $('#canvas-scroll').innerHTML=html+'</div>';
 }
@@ -333,7 +341,7 @@ function renderTimeline(){
   $('#canvas-scroll').innerHTML='<div class="timeline-wrap">'+dates.map(date=>{
     const tasks=visibleTasks.filter(t=>t.date===date).sort((a,b)=>timeRank(a)-timeRank(b)||topoOrder.indexOf(a.id)-topoOrder.indexOf(b.id));
     const pending=tasks.filter(t=>isPending(t.status)).length;
-    return `<section class="timeline-day"><div class="timeline-date ${date===DATA.event.date?'event-day':''}"><span>${date.slice(0,4)} 年 ${monthNumber(date)} 月</span><strong>${dayNumber(date)} <span>${DAY_INFO[date][0]}</span></strong><span class="day-phase">${esc(DAY_INFO[date][1])}</span>${date===DATA.event.date?`<span style="color:var(--accent);margin-top:5px">${esc(DATA.event.startTime)}–${esc(DATA.event.endTime)}</span>`:''}</div><div class="timeline-day-panel"><div class="timeline-day-heading"><span>${date===DATA.event.date?'活动当天':esc(DAY_INFO[date][1])}</span><small>${tasks.length} 项${pending?' · '+pending+' 项待决':''}</small></div>${tasks.length?'<div class="timeline-tasks">'+tasks.map(t=>taskCard(t)).join('')+'</div>':'<div class="timeline-empty">当天无匹配任务</div>'}</div></section>`;
+    return `<section class="timeline-day"><div class="timeline-date ${date===DATA.event.date?'event-day':''}"><span>${date.slice(0,4)} 年 ${monthNumber(date)} 月</span><strong>${dayNumber(date)} <span>${DAY_INFO[date][0]}</span></strong><span class="day-phase">${esc(DAY_INFO[date][1])}</span>${date===DATA.event.date?`<span style="color:var(--accent);margin-top:5px">${esc(DATA.event.startTime)}–${esc(DATA.event.endTime)}</span>`:''}</div><div class="timeline-day-panel"><div class="timeline-day-heading"><span>${date===DATA.event.date?'活动当天':esc(DAY_INFO[date][1])}</span><small>${tasks.length} 项${pending?' · '+pending+' 项'+esc(statusName(PENDING_ID)):''}</small></div>${tasks.length?'<div class="timeline-tasks">'+tasks.map(t=>taskCard(t)).join('')+'</div>':'<div class="timeline-empty">当天无匹配任务</div>'}</div></section>`;
   }).join('')+'</div>';
 }
 function collectRelations(id){
@@ -428,12 +436,25 @@ function progressHtml(t){
 }
 function renderDetail(id){
   const t=byId.get(id),loc=PALETTE.locations[t.location];
-  $('#detail-content').innerHTML=`<div class="detail-body"><div class="detail-kicker"><span class="detail-id">${t.id}</span><span class="aspect-pill" style="color:${PALETTE.aspects[t.aspect]}">${esc(categoryName(t.aspect))}</span><span class="status-pill" style="color:${statusMap.get(t.status).color};background:${statusMap.get(t.status).color}20">${esc(statusName(t.status))}</span></div><h2 class="detail-title" id="detail-title">${esc(t.title)}</h2>${!visibleTasks.some(item=>item.id===t.id)?'<p class="outside-note">此任务在当前筛选结果之外。</p>':''}<section class="detail-description"><h3>说明</h3><p id="task-description">${esc(t.description||'待补充')}</p></section><dl class="detail-fields"><div class="detail-field"><dt>截止日期与时段</dt><dd>${icon('clock',14)}${dateText(t.date)}${t.timeHint?' · '+esc(t.timeHint):' · 当天'}</dd></div><div class="detail-field"><dt>执行地点</dt><dd style="color:${loc[0]}">${icon(loc[1],14)}${esc(locationName(t.location))}</dd></div><div class="detail-field"><dt>执行人</dt><dd>${ownerHtml(t)}</dd></div><div class="detail-field"><dt>任务层</dt><dd><i class="swatch" style="background:${PALETTE.layers[t.layer][0]}"></i>${esc(layerName(t.layer))}层</dd></div><div class="detail-field full"><dt>参与者／对接人</dt><dd>${t.participants.length?t.participants.map(p=>`<span class="participant-chip">${esc(p)}</span>`).join(''):'<span style="color:#ac947c">未指定</span>'}</dd></div></dl>${progressHtml(t)}${t.pendingNote&&isPending(t.status)?`<div class="decision-box"><h3>${icon('info',14)} 待决说明</h3><p>${esc(t.pendingNote)}</p></div>`:''}<section class="detail-section"><h3>执行备注</h3><p>${esc(t.notes||'暂无补充备注')}</p></section><section class="detail-section"><h3>线索标签</h3><div class="task-tags detail-tags">${t.tags.length?t.tags.map(tagHtml).join(''):'<span class="detail-empty">未标注线索</span>'}</div></section><section class="detail-section"><h3>${icon('chain',15)}前置任务<small>${t.predecessors.length} 项 · 先完成</small></h3>${detailLinks(t.predecessors)}</section><section class="detail-section"><h3>${icon('chain',15)}后置任务<small>${t.successors.length} 项 · 后续执行</small></h3>${detailLinks(t.successors)}</section><section class="detail-section"><h3><span class="same-tag-key">同线索任务</span><small>${relation.sameTag.size} 项</small></h3>${detailLinks([...relation.sameTag])}</section><div class="detail-chain-summary"><span>全部上游 ${relation.upstream.size} 项 · 下游 ${relation.downstream.size} 项</span><button data-action="view-chain">查看关联 ${icon('arrow',13)}</button></div>${expenseView.taskExpensesHTML(id)}</div>`;
+  $('#detail-content').innerHTML=`<div class="detail-body"><div class="detail-kicker"><span class="detail-id">${t.id}</span><span class="aspect-pill" style="color:${PALETTE.aspects[t.aspect]}">${esc(categoryName(t.aspect))}</span>${StatusUI.badge(t.status,F.statuses,'status-pill-v9')}</div><h2 class="detail-title" id="detail-title">${esc(t.title)}</h2>${!visibleTasks.some(item=>item.id===t.id)?'<p class="outside-note">此任务在当前筛选结果之外。</p>':''}<section class="detail-description"><h3>说明</h3><p id="task-description">${esc(t.description||'待补充')}</p></section><dl class="detail-fields"><div class="detail-field"><dt>截止日期与时段</dt><dd>${icon('clock',14)}${dateText(t.date)}${t.timeHint?' · '+esc(t.timeHint):' · 当天'}</dd></div><div class="detail-field"><dt>执行地点</dt><dd style="color:${loc[0]}">${icon(loc[1],14)}${esc(locationName(t.location))}</dd></div><div class="detail-field"><dt>执行人</dt><dd>${ownerHtml(t)}</dd></div><div class="detail-field"><dt>任务层</dt><dd><i class="swatch" style="background:${PALETTE.layers[t.layer][0]}"></i>${esc(layerName(t.layer))}层</dd></div><div class="detail-field full"><dt>参与者／对接人</dt><dd>${t.participants.length?t.participants.map(p=>`<span class="participant-chip">${esc(p)}</span>`).join(''):'<span style="color:#ac947c">未指定</span>'}</dd></div></dl>${progressHtml(t)}${t.pendingNote&&isPending(t.status)?`<div class="decision-box"><h3>${icon('info',14)} 搁置原因</h3><p>${esc(t.pendingNote)}</p></div>`:''}<section class="detail-section"><h3>执行备注</h3><p>${esc(t.notes||'暂无补充备注')}</p></section><section class="detail-section"><h3>线索标签</h3><div class="task-tags detail-tags">${t.tags.length?t.tags.map(tagHtml).join(''):'<span class="detail-empty">未标注线索</span>'}</div></section><section class="detail-section"><h3>${icon('chain',15)}前置任务<small>${t.predecessors.length} 项 · 先完成</small></h3>${detailLinks(t.predecessors)}</section><section class="detail-section"><h3>${icon('chain',15)}后置任务<small>${t.successors.length} 项 · 后续执行</small></h3>${detailLinks(t.successors)}</section><section class="detail-section"><h3><span class="same-tag-key">同线索任务</span><small>${relation.sameTag.size} 项</small></h3>${detailLinks([...relation.sameTag])}</section><div class="detail-chain-summary"><span>全部上游 ${relation.upstream.size} 项 · 下游 ${relation.downstream.size} 项</span><button data-action="view-chain">查看关联 ${icon('arrow',13)}</button></div>${expenseView.taskExpensesHTML(id)}</div>`;
 }
 function changeView(view){state.view=view;$('#search-input').value=view==='expenses'?expenseView.getState().search:state.search;history.replaceState(null,'','#'+view);render()}
 function setLegend(open){$('#legend-pop').hidden=!open;$('#legend-toggle').setAttribute('aria-expanded',String(open));$('#legend-toggle').classList.toggle('is-open',open)}
 // 手机画布：把视图导航贴到筛选条件下方，画布占满剩余屏幕
-function alignCanvasMode(){if(!canvasMode())return;const nav=$('.view-nav'),sticky=$('#sticky-top');scrollTo({top:scrollY+nav.getBoundingClientRect().top-sticky.getBoundingClientRect().height,behavior:'instant'})}
+function alignCanvasMode(){if(!canvasMode())return;const anchor=$('#mobile-view-controls'),sticky=$('#sticky-top');scrollTo({top:scrollY+anchor.getBoundingClientRect().top-sticky.getBoundingClientRect().height-4,behavior:'instant'})}
+// v9.1：手机把视图标签行并进吸顶区（状态按钮一行＋视图标签一行）；桌面放回中栏
+function placeNav(){
+  const nav=$('.view-nav'),sticky=$('#sticky-top'),home=$('#center-col');
+  if(state.mobile&&nav.parentElement!==sticky)sticky.insertBefore(nav,$('#top-progress'));
+  else if(!state.mobile&&nav.parentElement!==home)home.insertBefore(nav,home.firstChild);
+}
+// v9.1：手机往下滚时收起标题栏（带回差，避免抖动）
+function syncTopCollapse(){
+  if(!state.mobile){document.body.classList.remove('top-collapsed');return}
+  const c=document.body.classList.contains('top-collapsed');
+  if(!c&&scrollY>72)document.body.classList.add('top-collapsed');
+  else if(c&&scrollY<8)document.body.classList.remove('top-collapsed');
+}
 function bindEvents(){
   document.addEventListener('error',event=>{if(event.target.matches?.('.progress-thumb img'))thumbFallback(event.target)},true);
   document.addEventListener('click',event=>{
@@ -445,7 +466,9 @@ function bindEvents(){
     const action=el.dataset.action;
     if(action==='reset-filters')resetFilters();
     if(action==='toggle-filters'){if(state.view==='expenses'||deskMq.matches)return;state.filtersOpen=!state.filtersOpen;syncFilterPanel();if(state.filtersOpen)requestAnimationFrame(()=>{const panel=$('#filter-panel'),top=panel.getBoundingClientRect().top-$('#sticky-top').getBoundingClientRect().height-6;if(top<0||top>innerHeight*0.6)scrollTo({top:scrollY+top,behavior:'smooth'})});if(!state.filtersOpen&&state.mobile)requestAnimationFrame(()=>$('.view-nav').scrollIntoView({block:'start',behavior:'smooth'}));}
-    if(action==='filter-pending'){state.filters.pending=state.filters.pending==='pending'?'':'pending';$('#filter-pending').value=state.filters.pending;render()}
+    if(action==='filter-pending'){const only=state.filters.status.length===1&&state.filters.status[0]===PENDING_ID;state.filters.status=only?[]:[PENDING_ID];render()}
+    if(action==='status-chip'){toggleStatus(el.dataset.status);return}
+    if(action==='clear-status'){state.filters.status=[];render();return}
     if(action==='filter-unassigned'){state.filters.assignee=state.filters.assignee==='unassigned'?'':'unassigned';$('#filter-assignee').value=state.filters.assignee;render()}
     if(action==='open-image'){openLightbox(el);return}
     if(action==='close-dialog')$('#task-dialog').close();
@@ -475,28 +498,40 @@ function bindEvents(){
   canvasEl.addEventListener('touchmove',event=>{if(pinch&&event.touches.length===2){event.preventDefault();setZoom(pinch.z*dist(event.touches)/pinch.d)}},{passive:false});
   canvasEl.addEventListener('touchend',event=>{if(event.touches.length<2)pinch=null});
   window.addEventListener('resize',fitFilterSummary);
+  window.addEventListener('scroll',syncTopCollapse,{passive:true});
   new ResizeObserver(()=>{document.documentElement.style.setProperty('--sticky-height',$('#sticky-top').getBoundingClientRect().height+'px');fitFilterSummary()}).observe($('#sticky-top'));
   new ResizeObserver(()=>document.documentElement.style.setProperty('--nav-height',$('.view-nav').getBoundingClientRect().height+'px')).observe($('.view-nav'));
   window.addEventListener('hashchange',()=>{const view=location.hash.slice(1);if(VIEW_INFO[view]&&view!==state.view){changeView(view)}});
 }
-function filterSummary(compact=false){
-  if(state.view==='expenses')return expenseView.summary(compact);
+function otherFilterParts(compact=false,labeled=false){
   const f=state.filters,parts=[];
   if(f.assignee){const name={assigned:'有执行人',unassigned:'无执行人'}[f.assignee]||personName(f.assignee);parts.push(compact&&['assigned','unassigned'].includes(f.assignee)?name:'执行人：'+name);}
-  if(f.date)parts.push(shortDate(f.date));
+  if(f.date)parts.push((labeled?'日期：':'')+shortDate(f.date));
   if(f.participant)parts.push((compact?'参与：':'参与者：')+f.participant);
   if(f.aspect)parts.push((compact?'':'方面：')+categoryName(f.aspect));
   if(f.tag)parts.push((compact?'':'线索：')+threadName(f.tag));
-  if(f.pending)parts.push(f.pending==='pending'?'仅待决':'非待决');
-  return parts.length?parts.join(' · '):(state.search?'全部执行人 · 全部日期':`全部任务 · 全部执行人${DATA.dates.length?' · '+shortDate(DATA.dates[0])+'—'+shortDate(DATA.dates.at(-1)):''}`);
+  return parts;
+}
+function filterSummary(compact=false){
+  if(state.view==='expenses')return expenseView.summary(compact);
+  const f=state.filters,parts=otherFilterParts(compact);
+  const st=StatusUI.summary(F.statuses,f.status);
+  if(st)parts.unshift(st);
+  return parts.length?parts.join(' · '):(state.search?'全部状态 · 全部执行人 · 全部日期':`全部任务 · 全部状态 · 全部执行人${DATA.dates.length?' · '+shortDate(DATA.dates[0])+'—'+shortDate(DATA.dates.at(-1)):''}`);
 }
 function syncFilterSummary(){
   const text=filterSummary();
   $$('[data-filter-summary]').forEach(el=>{el.textContent=text;el.title=text;el.setAttribute('aria-label','当前筛选：'+text)});
   const search=state.view==='expenses'?expenseView.getState().search:state.search;
   $$('[data-search-summary]').forEach(el=>el.textContent=search?'搜索：'+search:'');
-  const n=Object.values(state.filters).filter(Boolean).length+(state.search?1:0);
+  const n=Object.values(state.filters).filter(v=>Array.isArray(v)?v.length:v).length+(state.search?1:0);
   $('#active-filter-count').textContent=n?`已选 ${n} 项`:'';
+  // v9.1 手机：状态以外的筛选在「筛选 · n」角标计数，并在顶部用一行小字写出全部条件（方便截图）
+  const others=state.view==='expenses'?[]:otherFilterParts(false,true);if(search&&state.view!=='expenses')others.push('搜索：'+search);
+  state.otherFilterCount=others.length;
+  const cond=$('#filter-conditions');cond.hidden=!others.length;
+  const sel=state.filters.status.length?StatusUI.summary(F.statuses,state.filters.status)+' · ':'';
+  cond.textContent=others.length?`${sel}${others.join(' · ')} · 显示 ${visibleTasks.length}/${DATA.tasks.length} 项`:'';cond.title=cond.textContent;
   requestAnimationFrame(fitFilterSummary);
 }
 function fitFilterSummary(){
@@ -511,7 +546,24 @@ function fitFilterSummary(){
 function syncFilterPanel(){
   $('#filter-panel').classList.toggle('is-collapsed',!state.filtersOpen);
   $('#toggle-filters').setAttribute('aria-expanded',String(state.filtersOpen));
-  $('#filter-toggle-label').textContent=state.filtersOpen?'收起 ▴':'筛选 ▾';
+  const n=state.otherFilterCount||0;
+  $('#filter-toggle-label').textContent=state.mobile?('筛选'+(n?' · '+n:'')+(state.filtersOpen?' ▴':'')):(state.filtersOpen?'收起 ▴':'筛选 ▾');
+  $('#filter-toggle-label').classList.toggle('has-count',!!n);
+}
+function toggleStatus(id,on){
+  const set=new Set(state.filters.status);if(on===undefined)on=!set.has(id);
+  if(on)set.add(id);else set.delete(id);
+  state.filters.status=STATUSES.filter(x=>set.has(x));render();
+}
+// v9：状态多选（桌面在筛选条右侧，手机在统计条位置）；与筛选面板里的复选框同步
+function syncStatusBar(){
+  const counts=statusCounts(),sel=state.filters.status;
+  const html=`<span class="status-bar-label">状态</span>${StatusUI.chips(F.statuses,sel,counts,'data-action="status-chip" data-status')}${sel.length?'<button type="button" class="status-clear" data-action="clear-status" title="清除状态筛选">全部</button>':''}`;
+  $$('[data-status-bar]').forEach(el=>{el.innerHTML=html});
+  const un=DATA.tasks.filter(t=>!t.assignees.length).length,unOn=state.filters.assignee==='unassigned';
+  const q=$('#quick-unassigned');q.setAttribute('aria-pressed',String(unOn));q.classList.toggle('is-on',unOn);q.innerHTML=`<span class="chip-box" aria-hidden="true">${unOn?'✓':''}</span>只看无执行人<b>${un}</b>`;
+  const done=DATA.tasks.filter(t=>isDone(t.status)).length,pct=DATA.tasks.length?Math.round(done/DATA.tasks.length*100):0,bar=$('#top-progress');
+  bar.querySelector('i').style.width=pct+'%';bar.setAttribute('aria-valuenow',String(pct));bar.setAttribute('aria-label',`整体完成进度 ${done}/${DATA.tasks.length}（${pct}%）`);bar.title=`已完成 ${done} / ${DATA.tasks.length} 项（${pct}%）`;
 }
 function mobileReferences(t){
   const ids=new Set(visibleTasks.map(task=>task.id));
@@ -542,7 +594,7 @@ function renderMobileBoard(){
   let html='<div class="mobile-board">';
   html+=groups.map(group=>{
     const tasks=laneTasks(group,aspect);if(!tasks.length&&(state.filters.assignee||state.filters.aspect))return '';
-    return `<section class="mobile-group mobile-lane"><header class="mobile-group-heading"><h3>${esc(laneName(group,aspect))}</h3><span>${tasks.length} 项${tasks.length?' · '+STATUSES.map(id=>`<b style="color:${statusMap.get(id).color}">${esc(statusName(id))} ${tasks.filter(t=>t.status===id).length}</b>`).join(' '):''}</span></header>${tasks.length?STATUSES.map(id=>{const items=tasks.filter(t=>t.status===id);if(!items.length)return '';return `<section class="mobile-status-block"><h4 class="mobile-status-heading" style="color:${statusMap.get(id).color}">${esc(statusName(id))}<span>${items.length}</span></h4><div class="mobile-task-list">${items.map(t=>mobileTask(t,false,aspect?null:group)).join('')}</div></section>`}).join(''):'<p class="mobile-lane-empty">暂无任务</p>'}</section>`;
+    return `<section class="mobile-group mobile-lane"><header class="mobile-group-heading"><h3>${esc(laneName(group,aspect))}</h3><span>${tasks.length} 项${tasks.length?' · '+shownStatuses().map(id=>`<b style="color:${statusInfo(id).tone}">${esc(statusName(id))} ${tasks.filter(t=>t.status===id).length}</b>`).join(' '):''}</span></header>${tasks.length?shownStatuses().map(id=>{const items=tasks.filter(t=>t.status===id);if(!items.length)return '';return `<section class="mobile-status-block"><h4 class="mobile-status-heading" style="color:${statusInfo(id).tone}">${StatusUI.badge(id,F.statuses)}<span>${items.length}</span></h4><div class="mobile-task-list">${items.map(t=>mobileTask(t,false,aspect?null:group)).join('')}</div></section>`}).join(''):'<p class="mobile-lane-empty">暂无任务</p>'}</section>`;
   }).join('');$('#canvas-scroll').innerHTML=html+'</div>';
 }
 const expenseView=await ExpensesViewer.create({board:BOARD,onChange:render,openTask,icon});
