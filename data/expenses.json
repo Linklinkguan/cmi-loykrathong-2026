@@ -2,7 +2,7 @@
   "version": 1,
   "meta": {
     "title": "费用与支出",
-    "updatedAt": "2026-11-18T09:48:50.418359+07:00",
+    "updatedAt": "2026-11-18T10:37:24.150531+07:00",
     "timeZone": "Asia/Bangkok",
     "currency": "THB",
     "import": {
@@ -10,6 +10,16 @@
       "sha256": "7ee6919b204d00c18f429dc7736cc3c0fb3aa892b9801f85d5e0549edef6126f",
       "rows": 103,
       "importedAt": "2026-11-18T04:32:20.306683+07:00"
+    },
+    "budget": {
+      "cap": 15000,
+      "currency": "THB",
+      "status": "暂定",
+      "scope": "水灯材料＋食材基础费用",
+      "bookkeeper": "Link 林可",
+      "decidedBy": "Link 林可",
+      "decidedAt": "2026-11-18T10:36:00+07:00",
+      "note": "总预算暂定上限 15000 泰铢，含水灯材料和购买食材的基础费用；记账人 Link 林可（Link 11-18 10:36 原话，经 Elon 转达）。前台暂无预算上限显示位置，未加新界面。"
     }
   },
   "config": {
