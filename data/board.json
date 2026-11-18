@@ -2,7 +2,7 @@
   "version": 3,
   "meta": {
     "title": "2026 CMI 水灯节庆典筹备任务管理",
-    "updatedAt": "2026-11-18T22:13:29.410262+07:00",
+    "updatedAt": "2026-11-18T22:30:23.414730+07:00",
     "timeZone": "Asia/Bangkok",
     "heroTitle": "水灯节 · 筹备总览",
     "event": {
@@ -107,6 +107,12 @@
         "name": "社区展示",
         "color": "#E0607E",
         "icon": "network"
+      },
+      {
+        "id": "任务运维＋统筹策划",
+        "name": "任务运维＋统筹策划",
+        "color": "#24485F",
+        "icon": "board"
       }
     ],
     "threads": [
@@ -2603,6 +2609,130 @@
         {
           "time": "2026-11-18 12:24",
           "note": "水桶已有，Link 今天到场定位并装满。",
+          "by": "Link"
+        }
+      ]
+    },
+    {
+      "id": "T82",
+      "title": "把开发过程做成可回放文件",
+      "description": "把看板开发过程做成可回放文件。素材在攒。",
+      "category": "任务运维＋统筹策划",
+      "threads": [],
+      "date": "2026-11-18",
+      "timeHint": "待补充",
+      "layer": "中",
+      "location": "远程",
+      "status": "未开始",
+      "executor": [],
+      "participants": [],
+      "pre": [],
+      "pendingNote": "",
+      "notes": "日期待补充（日期为必填字段，暂填建卡日 11-18）",
+      "progress_log": [
+        {
+          "time": "2026-11-18 22:27",
+          "note": "Link 定：新建，归入任务运维＋统筹策划",
+          "by": "Link"
+        }
+      ]
+    },
+    {
+      "id": "T83",
+      "title": "认领卡二维码真机微信长按识别测试",
+      "description": "用真手机在微信里长按识别认领卡二维码，测一次。等 Link 测。",
+      "category": "任务运维＋统筹策划",
+      "threads": [],
+      "date": "2026-11-18",
+      "timeHint": "待补充",
+      "layer": "中",
+      "location": "远程",
+      "status": "未开始",
+      "executor": [
+        "Link"
+      ],
+      "participants": [],
+      "pre": [],
+      "pendingNote": "",
+      "notes": "日期待补充（日期为必填字段，暂填建卡日 11-18）",
+      "progress_log": [
+        {
+          "time": "2026-11-18 22:27",
+          "note": "Link 定：新建，归入任务运维＋统筹策划",
+          "by": "Link"
+        }
+      ]
+    },
+    {
+      "id": "T84",
+      "title": "关系结构视图改标题",
+      "description": "关系结构视图改标题。Yuki 建议「主要事项」，Link 还没定。",
+      "category": "任务运维＋统筹策划",
+      "threads": [],
+      "date": "2026-11-18",
+      "timeHint": "待补充",
+      "layer": "中",
+      "location": "远程",
+      "status": "搁置",
+      "executor": [],
+      "participants": [],
+      "pre": [],
+      "pendingNote": "Yuki 建议「主要事项」，Link 还没定",
+      "notes": "日期待补充（日期为必填字段，暂填建卡日 11-18）",
+      "progress_log": [
+        {
+          "time": "2026-11-18 22:27",
+          "note": "Link 定：新建，归入任务运维＋统筹策划",
+          "by": "Link"
+        }
+      ]
+    },
+    {
+      "id": "T85",
+      "title": "看板开发与使用过程日志（持续追加）",
+      "description": "持续追加看板开发与使用过程日志。具体内容待补充。",
+      "category": "任务运维＋统筹策划",
+      "threads": [],
+      "date": "2026-11-18",
+      "timeHint": "待补充",
+      "layer": "中",
+      "location": "远程",
+      "status": "进行中",
+      "executor": [],
+      "participants": [],
+      "pre": [],
+      "pendingNote": "",
+      "notes": "日期待补充（日期为必填字段，暂填建卡日 11-18）",
+      "progress_log": [
+        {
+          "time": "2026-11-18 22:27",
+          "note": "Link 定：新建，归入任务运维＋统筹策划",
+          "by": "Link"
+        }
+      ]
+    },
+    {
+      "id": "T86",
+      "title": "产品反思与笔记",
+      "description": "按 Link 的口述和聊天截图整理产品反思与笔记。由 Elon 写日志。",
+      "category": "任务运维＋统筹策划",
+      "threads": [],
+      "date": "2026-11-18",
+      "timeHint": "待补充",
+      "layer": "中",
+      "location": "远程",
+      "status": "进行中",
+      "executor": [
+        "Elon"
+      ],
+      "participants": [],
+      "pre": [],
+      "pendingNote": "",
+      "notes": "日期待补充（日期为必填字段，暂填建卡日 11-18）",
+      "progress_log": [
+        {
+          "time": "2026-11-18 22:27",
+          "note": "Link 定：新建，归入任务运维＋统筹策划",
           "by": "Link"
         }
       ]
