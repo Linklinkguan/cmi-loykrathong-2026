@@ -61,3 +61,31 @@
   .log-supplement input{grid-column:1/-1}
 }
 .admin-thumb-fallback{display:flex;align-items:center;justify-content:center;width:80px;height:60px;border-radius:6px;border:1px solid #efdcc2;background:#F3EADF;color:#6f5c4c;font-size:10.5px;line-height:1.3;padding:4px;text-align:center;overflow:hidden;overflow-wrap:anywhere}
+
+.claim-privacy{padding:1rem;border:2px solid #a65d57;background:#fff2e9;color:#702d24;font-weight:700;border-radius:8px}.claims-table{min-width:1000px;width:100%}.claims-table td{vertical-align:top;white-space:pre-wrap;overflow-wrap:anywhere}.claims-table td:nth-child(4){min-width:14rem}#claim-form{margin-bottom:2rem}#claim-dialog .dialog-body label{display:block;margin:1rem 0}#claim-resolve-error,#claim-error{color:#a3352c}
+
+.claim-status{display:inline-block;padding:1px 8px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}.claim-status-pending{background:#FBE3DC;color:#A6432F}.claim-status-confirmed{background:#E3F0E5;color:#2F6B3B}.claim-status-rejected{background:#EFECE6;color:#5E5A55}.claims-table td:last-child{white-space:nowrap}
+.claims-table td:first-child,.claims-table td:nth-child(5),.claims-table td:nth-child(6){white-space:nowrap;overflow-wrap:normal}.claims-table td:nth-child(3){min-width:6.5em}
+
+/* v10.1：认领管理——隐私提示改中性底；状态色统一；桌面表格行高统一 48px；手机改卡片列表 */
+.claim-privacy{padding:.75rem 1rem;border:1px solid #E4D9C8;background:#F3EEE5;color:#4A3628;font-weight:600;border-radius:8px}
+.claim-status-pending{background:#FBF1DE;color:#946116;box-shadow:inset 0 0 0 1px #C98A2B}.claim-status-confirmed{background:#E3F0E5;color:#2F6B3B}.claim-status-rejected{background:#EFECE6;color:#5E5A55}
+.claims-table{table-layout:fixed;border-collapse:collapse}
+.claims-table tbody tr{height:48px}
+.claims-table tbody td{height:48px;box-sizing:border-box;padding:0 .6rem;vertical-align:middle;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.claims-table td .claim-cell{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.claims-table th:nth-child(1){width:5.5em}.claims-table th:nth-child(2){width:14em}.claims-table th:nth-child(3){width:8em}.claims-table th:nth-child(5){width:9.5em}.claims-table th:nth-child(6){width:6em}.claims-table th:nth-child(7){width:13em}.claims-table th:nth-child(8){width:10.5em}
+.claims-table td:nth-child(4){min-width:0}
+.claim-actions{display:flex;gap:6px}.claim-actions button{height:32px;padding:0 .7rem;line-height:1;white-space:nowrap}
+@media(max-width:800px){
+  #tab-claims .table-scroller{overflow:visible}
+  .claims-table{min-width:0;table-layout:auto}.claims-table thead{display:none}
+  .claims-table,.claims-table tbody{display:block;width:100%}
+  .claims-table tbody tr.claim-row{display:block;height:auto;margin:0 0 12px;padding:12px 14px;border:1px solid #E4D9C8;border-radius:12px;background:#FFFCF7}
+  .claims-table tbody td{display:flex;gap:10px;height:auto;padding:3px 0;border:0;white-space:normal;overflow:visible}
+  .claims-table tbody td::before{content:attr(data-label);flex:0 0 4.5em;color:#8C7867;font-size:12px;padding-top:2px}
+  .claims-table td .claim-cell{white-space:pre-wrap;overflow-wrap:anywhere;overflow:visible}
+  .claims-table td.claim-ops::before{display:none}
+  .claims-table td.claim-ops:empty{display:none}
+  .claim-actions{width:100%;margin-top:10px}.claim-actions button{flex:1;height:44px;font-size:15px}
+}

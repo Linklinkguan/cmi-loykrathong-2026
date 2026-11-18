@@ -48,7 +48,8 @@ const shownStatuses=()=>state.filters.status.length?STATUSES.filter(id=>state.fi
 const statusClass=t=>'st-'+statusInfo(t.status).kind;
 const statusBadge=t=>StatusUI.badge(t.status,F.statuses);
 const DAY_INFO=Object.fromEntries(DATA.dates.map(date=>[date,[weekday(date),F.stages.find(stage=>stage.date===date)?.name||'待补充']]));
-const VIEWS=[...F.views.filter(v=>v.enabled),{id:'expenses',name:'费用',icon:'money',description:'逐项记录采购与改动，按付款人、类目核对支出。'}];
+const claimConfig=BoardCore.claimsConfig(BOARD), claims=BOARD.claims||[], pendingClaims=claims.filter(c=>c.status==='pending').sort((a,b)=>b.createdAt.localeCompare(a.createdAt));
+const VIEWS=[...F.views.filter(v=>v.enabled),{id:'expenses',name:'费用',icon:'money',description:'逐项记录采购与改动，按付款人、类目核对支出。'},...(claimConfig.enabled?[{id:'claims',name:claimConfig.texts.viewTab+' '+pendingClaims.length,icon:'info',description:claimConfig.texts.viewName}]:[])];
 const VIEW_INFO=Object.fromEntries(VIEWS.map(v=>[v.id,[v.name,v.description]]));
 
 const state = {view:Object.keys(VIEW_INFO)[0],filters:{participant:'',assignee:'',aspect:'',date:'',tag:'',status:[]},search:'',networkGroup:'aspect',boardGroup:'assignee',selectedId:null,mobile:window.matchMedia('(max-width:800px)').matches,filtersOpen:false,zoom:{chain:1,network:1,board:1,timeline:1}};
@@ -60,7 +61,7 @@ const saveUi=()=>{try{localStorage.setItem(UI_KEY,JSON.stringify(ui))}catch{}};
 const deskMq=window.matchMedia('(min-width:1024px)');
 let fullscreen=false,detailWasDocked=false;
 const ZOOM_MIN=.2,ZOOM_MAX=1.5;
-const canvasMode=()=>state.mobile&&ui.mobileCanvas&&state.view!=='expenses';
+const canvasMode=()=>state.mobile&&ui.mobileCanvas&&!['expenses','claims'].includes(state.view);
 const isDocked=()=>deskMq.matches&&!ui.detail&&!fullscreen&&state.view!=='expenses';
 const byId = new Map(DATA.tasks.map(t=>[t.id,t]));
 const tagMap = new Map(DATA.tags.map(t=>[t.name,t]));
@@ -84,7 +85,7 @@ function init(){
   document.title=BOARD.meta.title;
   $('#page-title').textContent=BOARD.meta.title;
   $('.hero-title').textContent=BOARD.meta.heroTitle;
-  $('.tabs').innerHTML=VIEWS.map((v,i)=>`<button class="tab" id="tab-${v.id}" data-tab="${v.id}" role="tab" aria-selected="${v.id===state.view}" aria-controls="view-panel" tabindex="${v.id===state.view?0:-1}"><span>${icon(v.icon,17)}</span>${esc(v.name)}<span class="tab-index">${i+1}</span></button>`).join('');
+  $('.tabs').innerHTML=VIEWS.map((v,i)=>`<button class="tab${v.id==='claims'?' tab-claims'+(pendingClaims.length?' has-pending':''):''}" id="tab-${v.id}" data-tab="${v.id}" role="tab" aria-selected="${v.id===state.view}" aria-controls="view-panel" tabindex="${v.id===state.view?0:-1}"><span>${icon(v.icon,17)}</span>${esc(v.name)}<span class="tab-index">${i+1}</span></button>`).join('');
   if(new URLSearchParams(location.search).get('preview')==='1'||new URLSearchParams(location.search).get('expenses-preview')==='1'){
     $('#preview-banner').hidden=false;
     $('#preview-banner').textContent='本地预览 · 浏览器草稿，尚未发布';
@@ -122,6 +123,8 @@ function init(){
   $('#validation-status').innerHTML='<i></i>依赖已校验 · 无悬空 · 无环';
   const hash=location.hash.slice(1);if(VIEW_INFO[hash])state.view=hash;
   bindEvents();render();
+  // v10.1：任务深链 ?task=编号（认领卡片二维码指向这里），直接打开该任务详情
+  const deepTask=new URLSearchParams(location.search).get('task');if(deepTask&&byId.has(deepTask))openTask(deepTask);
 }
 function getVisible(){return DATA.tasks.filter(t=>{
   const f=state.filters;
@@ -199,9 +202,16 @@ function render(){
   $$('[data-filter]').forEach(el=>el.classList.toggle('is-active',!!el.value));
   $$('[data-tab]').forEach(tab=>{const active=tab.dataset.tab===state.view;tab.setAttribute('aria-selected',String(active));tab.tabIndex=active?0:-1});
   $('#view-panel').setAttribute('aria-labelledby','tab-'+state.view);
+  updateClaimBanner();
   $('#result-count').innerHTML=`显示 <b>${visibleTasks.length}</b> / ${DATA.tasks.length} 项`;$('#toggle-count').innerHTML=`<b>${visibleTasks.length}</b>/${DATA.tasks.length} 项`;
   $('#view-title').textContent=VIEW_INFO[state.view][0];
   $('#view-description').textContent=VIEW_INFO[state.view][1];
+  if(state.view==='claims'){
+    $('#view-title').textContent=claimConfig.texts.viewName;$('#view-controls').innerHTML='';$('#mobile-view-controls').innerHTML='';$('#focus-bar').hidden=true;
+    const canvas=$('#canvas-scroll');canvas.className='workspace claims-workspace';
+    canvas.innerHTML=`<div id="claims"><h2>${esc(claimConfig.texts.viewName)}</h2><p class="claim-intro">${esc(claimConfig.texts.viewIntro)}</p>${pendingClaims.length?pendingClaims.map(c=>{const t=byId.get(c.taskId);return `<article class="claim-item"><div class="claim-item-meta"><span><strong>${esc(c.id)}</strong><em class="claim-pill">${esc(claimConfig.texts.statusNames.pending)}</em></span><time>${esc(c.createdAt)}</time></div><button class="claim-task-link" data-task="${esc(c.taskId)}">${esc(c.taskId)} · ${esc(t?.title||'')}</button><p class="claim-who"><small>申请人</small><b>${esc(c.nickname)}</b></p><p class="claim-message">${esc(c.message)}</p></article>`}).join(''):'<p class="claim-empty">暂无待确认的认领申请</p>'}<p class="claim-processed">已处理 ${claims.length-pendingClaims.length} 条</p></div>`;
+    $('#result-count').textContent=`待确认 ${pendingClaims.length} 条`;return;
+  }
   if(expensesMode){
     $('#view-title').textContent=expenseView.getData()?.meta.title||'费用与支出';
     $('#view-controls').innerHTML='';$('#mobile-view-controls').innerHTML='';$('#focus-bar').hidden=true;
@@ -436,7 +446,31 @@ function progressHtml(t){
 }
 function renderDetail(id){
   const t=byId.get(id),loc=PALETTE.locations[t.location];
-  $('#detail-content').innerHTML=`<div class="detail-body"><div class="detail-kicker"><span class="detail-id">${t.id}</span><span class="aspect-pill" style="color:${PALETTE.aspects[t.aspect]}">${esc(categoryName(t.aspect))}</span>${StatusUI.badge(t.status,F.statuses,'status-pill-v9')}</div><h2 class="detail-title" id="detail-title">${esc(t.title)}</h2>${!visibleTasks.some(item=>item.id===t.id)?'<p class="outside-note">此任务在当前筛选结果之外。</p>':''}<section class="detail-description"><h3>说明</h3><p id="task-description">${esc(t.description||'待补充')}</p></section><dl class="detail-fields"><div class="detail-field"><dt>截止日期与时段</dt><dd>${icon('clock',14)}${dateText(t.date)}${t.timeHint?' · '+esc(t.timeHint):' · 当天'}</dd></div><div class="detail-field"><dt>执行地点</dt><dd style="color:${loc[0]}">${icon(loc[1],14)}${esc(locationName(t.location))}</dd></div><div class="detail-field"><dt>执行人</dt><dd>${ownerHtml(t)}</dd></div><div class="detail-field"><dt>任务层</dt><dd><i class="swatch" style="background:${PALETTE.layers[t.layer][0]}"></i>${esc(layerName(t.layer))}层</dd></div><div class="detail-field full"><dt>参与者／对接人</dt><dd>${t.participants.length?t.participants.map(p=>`<span class="participant-chip">${esc(p)}</span>`).join(''):'<span style="color:#ac947c">未指定</span>'}</dd></div></dl>${progressHtml(t)}${t.pendingNote&&isPending(t.status)?`<div class="decision-box"><h3>${icon('info',14)} 搁置原因</h3><p>${esc(t.pendingNote)}</p></div>`:''}<section class="detail-section"><h3>执行备注</h3><p>${esc(t.notes||'暂无补充备注')}</p></section><section class="detail-section"><h3>线索标签</h3><div class="task-tags detail-tags">${t.tags.length?t.tags.map(tagHtml).join(''):'<span class="detail-empty">未标注线索</span>'}</div></section><section class="detail-section"><h3>${icon('chain',15)}前置任务<small>${t.predecessors.length} 项 · 先完成</small></h3>${detailLinks(t.predecessors)}</section><section class="detail-section"><h3>${icon('chain',15)}后置任务<small>${t.successors.length} 项 · 后续执行</small></h3>${detailLinks(t.successors)}</section><section class="detail-section"><h3><span class="same-tag-key">同线索任务</span><small>${relation.sameTag.size} 项</small></h3>${detailLinks([...relation.sameTag])}</section><div class="detail-chain-summary"><span>全部上游 ${relation.upstream.size} 项 · 下游 ${relation.downstream.size} 项</span><button data-action="view-chain">查看关联 ${icon('arrow',13)}</button></div>${expenseView.taskExpensesHTML(id)}</div>`;
+  $('#detail-content').innerHTML=`<div class="detail-body"><div class="detail-kicker"><span class="detail-id">${t.id}</span><span class="aspect-pill" style="color:${PALETTE.aspects[t.aspect]}">${esc(categoryName(t.aspect))}</span>${StatusUI.badge(t.status,F.statuses,'status-pill-v9')}</div><h2 class="detail-title" id="detail-title">${esc(t.title)}</h2>${!visibleTasks.some(item=>item.id===t.id)?'<p class="outside-note">此任务在当前筛选结果之外。</p>':''}<section class="detail-description"><h3>说明</h3><p id="task-description">${esc(t.description||'待补充')}</p></section><dl class="detail-fields"><div class="detail-field"><dt>截止日期与时段</dt><dd>${icon('clock',14)}${dateText(t.date)}${t.timeHint?' · '+esc(t.timeHint):' · 当天'}</dd></div><div class="detail-field"><dt>执行地点</dt><dd style="color:${loc[0]}">${icon(loc[1],14)}${esc(locationName(t.location))}</dd></div><div class="detail-field"><dt>执行人</dt><dd>${ownerHtml(t)}</dd></div><div class="detail-field"><dt>任务层</dt><dd><i class="swatch" style="background:${PALETTE.layers[t.layer][0]}"></i>${esc(layerName(t.layer))}层</dd></div><div class="detail-field full"><dt>参与者／对接人</dt><dd>${t.participants.length?t.participants.map(p=>`<span class="participant-chip">${esc(p)}</span>`).join(''):'<span style="color:#ac947c">未指定</span>'}</dd></div></dl>${progressHtml(t)}${t.pendingNote&&isPending(t.status)?`<div class="decision-box"><h3>${icon('info',14)} 搁置原因</h3><p>${esc(t.pendingNote)}</p></div>`:''}<section class="detail-section"><h3>执行备注</h3><p>${esc(t.notes||'暂无补充备注')}</p></section><section class="detail-section"><h3>线索标签</h3><div class="task-tags detail-tags">${t.tags.length?t.tags.map(tagHtml).join(''):'<span class="detail-empty">未标注线索</span>'}</div></section><section class="detail-section"><h3>${icon('chain',15)}前置任务<small>${t.predecessors.length} 项 · 先完成</small></h3>${detailLinks(t.predecessors)}</section><section class="detail-section"><h3>${icon('chain',15)}后置任务<small>${t.successors.length} 项 · 后续执行</small></h3>${detailLinks(t.successors)}</section><section class="detail-section"><h3><span class="same-tag-key">同线索任务</span><small>${relation.sameTag.size} 项</small></h3>${detailLinks([...relation.sameTag])}</section><div class="detail-chain-summary"><span>全部上游 ${relation.upstream.size} 项 · 下游 ${relation.downstream.size} 项</span><button data-action="view-chain">查看关联 ${icon('arrow',13)}</button></div>${expenseView.taskExpensesHTML(id)}${claimDetail(t)}</div>${claimAction(t)}`;
+}
+// v10.1：手机待确认横幅（状态按钮下方 32px）；有其他筛选条件行时让位，保证吸顶区 ≤128px
+function updateClaimBanner(){const banner=$('#claim-banner');if(!banner)return;const show=claimConfig.enabled&&state.mobile&&pendingClaims.length>0&&state.view!=='claims'&&$('#filter-conditions').hidden;banner.hidden=!show;if(show)banner.textContent=claimConfig.texts.banner.replace('{n}',pendingClaims.length)}
+function claimDetail(t){const list=pendingClaims.filter(c=>c.taskId===t.id);return list.length?`<section class="detail-section claim-detail"><h3>认领申请（待确认）</h3>${list.map(c=>`<div><strong>${esc(c.nickname)}</strong><p>${esc(c.message)}</p></div>`).join('')}</section>`:''}
+function claimBlocked(t){return isDone(t.status)&&!claimConfig.allowDone?'已完成的任务不再接受认领':(!claimConfig.allowAssigned&&t.assignees.length?claimConfig.texts.assignedNote:'')}
+function claimAction(t){if(!claimConfig.enabled)return '';const blocked=claimBlocked(t);return `<div class="claim-action${blocked?' is-blocked':''}">${blocked?'<p>'+esc(blocked)+'</p>':`<button type="button" class="claim-primary" data-action="open-claim">${esc(claimConfig.texts.button)}</button>`}</div>`}
+let claimUrl=null,claimTaskId=null;
+function openClaim(){const t=byId.get(state.selectedId);if(!t||!claimConfig.enabled||claimBlocked(t))return;
+  if(claimTaskId!==t.id){$('#claim-form').reset();claimTaskId=t.id}
+  ClaimCard.loadFont();ClaimCard.loadQr().catch(()=>{});$('#claim-title').textContent=claimConfig.texts.formTitle;$('#claim-task').textContent=t.id+' · '+t.title;
+  for(const key of ['nickname','message']){const el=$('#claim-'+key);el.placeholder=claimConfig.texts[key+'Hint'];el.maxLength=claimConfig.limits[key];$('#claim-'+key+'-label').textContent=claimConfig.texts[key+'Label'];el.removeAttribute('aria-invalid')}
+  $('#claim-privacy').textContent=claimConfig.texts.privacy;$('#claim-error').hidden=true;updateClaimCount();updateClaimWarning();$('#claim-dialog').showModal();
+}
+// 前台只提醒、不拦截：昵称或留言疑似含手机号、身份证、邮箱、微信号时显示醒目提醒，仍可生成卡片（后台录入和 board.py 会拦）
+function clearClaimError(e){const el=$('#claim-error');if(!el.hidden&&e.target.value.trim()){e.target.removeAttribute('aria-invalid');if(!$('#claim-form [aria-invalid=true]'))el.hidden=true}}
+function updateClaimWarning(){const found=['nickname','message'].map(key=>{const issue=BoardCore.privacyIssue($('#claim-'+key).value.trim());$('#claim-'+key).classList.toggle('has-privacy-warning',!!issue);return issue?claimConfig.texts.privacyWarn.replace('{field}',claimConfig.texts[key+'Label']).replace('{issue}',issue):''}).filter(Boolean);const el=$('#claim-warning');el.textContent=found.join('\n');el.hidden=!found.length;return found.join('\n')}
+function updateClaimCount(){$('#claim-count').textContent=Array.from($('#claim-message').value).length+' / '+claimConfig.limits.message}
+function revokeClaim(){if(claimUrl){URL.revokeObjectURL(claimUrl);claimUrl=null}$('#claim-card-img').removeAttribute('src');$('#claim-card-download').removeAttribute('href')}
+async function submitClaim(event){event.preventDefault();const values={},errors=[];
+  for(const key of ['nickname','message']){const el=$('#claim-'+key),value=el.value.trim(),label=claimConfig.texts[key+'Label'];values[key]=value;const error=!value?'请填写'+label:Array.from(value).length>claimConfig.limits[key]?label+'不能超过 '+claimConfig.limits[key]+' 个字':'';el.setAttribute('aria-invalid',String(!!error));if(error)errors.push(error)}
+  const errorEl=$('#claim-error');errorEl.textContent=errors.join('；');errorEl.hidden=!errors.length;const warn=updateClaimWarning();if(errors.length)return;
+  const button=event.submitter||$('#claim-form [type=submit]');button.disabled=true;
+  try{const t=byId.get(state.selectedId),canvas=await ClaimCard.render({board:BOARD,task:t,...values,privacyFlag:!!warn,now:new Date()});const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));if(!blob)throw Error('无法生成图片');revokeClaim();claimUrl=URL.createObjectURL(blob);$('#claim-card-img').src=claimUrl;$('#claim-card-download').href=claimUrl;$('#claim-card-download').download=`认领-${t.id}-${values.nickname.replace(/[\\/:*?"<>|]/g,'_')}.png`;$('#claim-share-hint').textContent=claimConfig.texts.shareHint;const cw=$('#claim-card-warning');cw.textContent=warn;cw.hidden=!warn;$('#claim-card-dialog').showModal()}
+  catch(e){errorEl.textContent='生成卡片失败，请重试。';errorEl.hidden=false}finally{button.disabled=false}
 }
 function changeView(view){state.view=view;$('#search-input').value=view==='expenses'?expenseView.getState().search:state.search;history.replaceState(null,'','#'+view);render()}
 function setLegend(open){$('#legend-pop').hidden=!open;$('#legend-toggle').setAttribute('aria-expanded',String(open));$('#legend-toggle').classList.toggle('is-open',open)}
@@ -456,6 +490,7 @@ function syncTopCollapse(){
   else if(c&&scrollY<8)document.body.classList.remove('top-collapsed');
 }
 function bindEvents(){
+  $('#claim-form').addEventListener('submit',submitClaim);$('#claim-message').addEventListener('input',()=>{updateClaimCount();updateClaimWarning()});$('#claim-nickname').addEventListener('input',updateClaimWarning);for(const k of ['nickname','message'])$('#claim-'+k).addEventListener('input',clearClaimError);$('#claim-close').addEventListener('click',()=>$('#claim-dialog').close());$('#claim-back').addEventListener('click',()=>$('#claim-card-dialog').close());$('#claim-card-close').addEventListener('click',()=>{$('#claim-card-dialog').close();$('#claim-dialog').close()});$('#claim-card-dialog').addEventListener('close',revokeClaim);
   document.addEventListener('error',event=>{if(event.target.matches?.('.progress-thumb img'))thumbFallback(event.target)},true);
   document.addEventListener('click',event=>{
     const evLine=event.target.closest('#nav-event-line');if(evLine){const open=!evLine.classList.contains('is-open');evLine.classList.toggle('is-open',open);evLine.setAttribute('aria-expanded',String(open));return}
@@ -470,6 +505,8 @@ function bindEvents(){
     if(action==='status-chip'){toggleStatus(el.dataset.status);return}
     if(action==='clear-status'){state.filters.status=[];render();return}
     if(action==='filter-unassigned'){state.filters.assignee=state.filters.assignee==='unassigned'?'':'unassigned';$('#filter-assignee').value=state.filters.assignee;render()}
+    if(action==='open-claim'){openClaim();return}
+    if(action==='open-claims'){changeView('claims');scrollTo({top:0,behavior:'instant'});return}
     if(action==='open-image'){openLightbox(el);return}
     if(action==='close-dialog')$('#task-dialog').close();
     if(action==='clear-focus'){state.selectedId=null;relation=emptyRelations();updateHighlight();const dialog=$('#task-dialog');if(dialog.open&&!dialog.matches(':modal'))dialog.close()}
@@ -529,7 +566,7 @@ function syncFilterSummary(){
   // v9.1 手机：状态以外的筛选在「筛选 · n」角标计数，并在顶部用一行小字写出全部条件（方便截图）
   const others=state.view==='expenses'?[]:otherFilterParts(false,true);if(search&&state.view!=='expenses')others.push('搜索：'+search);
   state.otherFilterCount=others.length;
-  const cond=$('#filter-conditions');cond.hidden=!others.length;
+  const cond=$('#filter-conditions');cond.hidden=!others.length;updateClaimBanner();
   const sel=state.filters.status.length?StatusUI.summary(F.statuses,state.filters.status)+' · ':'';
   cond.textContent=others.length?`${sel}${others.join(' · ')} · 显示 ${visibleTasks.length}/${DATA.tasks.length} 项`:'';cond.title=cond.textContent;
   requestAnimationFrame(fitFilterSummary);

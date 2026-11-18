@@ -239,6 +239,64 @@
             "$ref": "#/$defs/view"
           },
           "minItems": 1
+        },
+        "claims": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "allowDone": {
+              "type": "boolean"
+            },
+            "allowAssigned": {
+              "type": "boolean",
+              "description": "已有执行人的任务是否仍显示认领按钮；缺省 true"
+            },
+            "limits": {
+              "type": "object",
+              "properties": {
+                "nickname": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "message": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            },
+            "boardUrl": {
+              "type": "string"
+            },
+            "logo": {
+              "type": "string"
+            },
+            "logoAlt": {
+              "type": "string"
+            },
+            "logoWidth": {
+              "type": "integer",
+              "minimum": 40,
+              "maximum": 400,
+              "description": "卡片 Logo 显示宽度（px），等比缩放；缺省 150"
+            },
+            "texts": {
+              "type": "object",
+              "properties": {
+                "statusNames": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                }
+              },
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "description": "可省略；缺省值由程序合并。"
         }
       },
       "additionalProperties": true
@@ -249,6 +307,13 @@
         "$ref": "#/$defs/task"
       },
       "minItems": 0
+    },
+    "claims": {
+      "type": "array",
+      "description": "任务认领申请；可省略，等同空数组。",
+      "items": {
+        "$ref": "#/$defs/claim"
+      }
     }
   },
   "additionalProperties": true,
@@ -686,6 +751,74 @@
         }
       },
       "additionalProperties": false
+    },
+    "claim": {
+      "type": "object",
+      "required": [
+        "id",
+        "taskId",
+        "nickname",
+        "message",
+        "createdAt",
+        "status"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^CL[0-9]{3,}$"
+        },
+        "taskId": {
+          "type": "string"
+        },
+        "nickname": {
+          "type": "string",
+          "minLength": 1
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        },
+        "createdAt": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}$"
+        },
+        "status": {
+          "enum": [
+            "pending",
+            "confirmed",
+            "rejected"
+          ]
+        },
+        "resolvedAt": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "resolvedBy": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "personId": {
+          "type": "string"
+        },
+        "note": {
+          "type": "string",
+          "maxLength": 200
+        }
+      },
+      "additionalProperties": false,
+      "description": "动态长度、引用、隐私与处理状态由程序校验。"
     }
   }
 }

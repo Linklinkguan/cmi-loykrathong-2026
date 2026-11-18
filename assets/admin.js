@@ -3,7 +3,8 @@
   const $=(selector,root=document)=>root.querySelector(selector), $$=(selector,root=document)=>[...root.querySelectorAll(selector)];
   const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const clone=value=>JSON.parse(JSON.stringify(value));
-  const DRAFT_KEY='cmi-board-draft-v3';
+  const DRAFT_KEY='cmi-board-draft-v3', JOURNAL_KEY='cmi-admin-journal-v10', EXPENSE_JOURNAL_KEY='cmi-expense-journal-v10';
+  let journal=[], snapshot=null, initialBoard=null;
   const state={board:null,dirty:false,activeTab:'tasks',search:'',statuses:[],executor:'',frameworkKind:'threads',editingTask:null,taskOriginal:null,editingEntity:null,entityOriginal:null,advancedDirty:false,repairOnly:false};
   const collectionNames={threads:'线索标签',categories:'范畴',statuses:'状态',people:'执行人',stages:'阶段与日期',layers:'任务层',locations:'执行地点',views:'视图配置'};
   const colorNames={paper:'页面底色',surface:'表面底色',white:'卡片白色',ink:'主要文字',muted:'辅助文字',brown:'主按钮',line:'边框',accent:'强调／下游',green:'前置／上游',sameTag:'同线索'};
@@ -15,7 +16,16 @@
   function collection(kind=state.frameworkKind,board=state.board){return kind==='people'?board.people:board.framework[kind]}
   function labelFor(kind,id){return collection(kind).find(item=>item.id===id)?.name||id}
   function options(items,selected='',emptyLabel){return (emptyLabel===undefined?'':`<option value="">${esc(emptyLabel)}</option>`)+items.map(item=>`<option value="${esc(item.id)}" ${item.id===selected?'selected':''}>${esc(item.name||item.title||item.id)}</option>`).join('')}
-  function markChanged(){state.dirty=true;state.board.meta.updatedAt=nowBangkok();state.advancedDirty=false;renderAll();window.dispatchEvent(new Event('board-admin-change'))}
+  function recordChange(before,after,action,ids={},file){
+    const a=clone(before),b=clone(after),old=a.meta.updatedAt; b.meta.updatedAt=old;
+    const patch=BoardCore.jsonPatch(a,b);if(!patch.length){after.meta.updatedAt=old;return false;}
+    const stamp=nowBangkok();after.meta.updatedAt=stamp;
+    const changes={};for(const key of new Set([...Object.keys(a),...Object.keys(b)])){if(JSON.stringify(a[key])!==JSON.stringify(b[key]))changes[key]={before:a[key]??null,after:b[key]??null};}
+    if(ids.taskId&&!ids.claimId){const x=a.tasks.find(t=>t.id===ids.taskId),y=b.tasks.find(t=>t.id===ids.taskId);for(const k of Object.keys(changes))delete changes[k];if(!x||!y)changes.task={before:x??null,after:y??null};else for(const key of new Set([...Object.keys(x),...Object.keys(y)])){if(JSON.stringify(x[key])!==JSON.stringify(y[key]))changes[key]={before:x[key]??null,after:y[key]??null};}}
+    if(ids.claimId){const oldClaim=(a.claims||[]).find(c=>c.id===ids.claimId)||null,newClaim=(b.claims||[]).find(c=>c.id===ids.claimId)||null;for(const k of Object.keys(changes))delete changes[k];changes.claim={before:oldClaim,after:newClaim};if(action==='claim-confirm'){const x=a.tasks.find(t=>t.id===ids.taskId),y=b.tasks.find(t=>t.id===ids.taskId);changes.executor={before:x.executor,after:y.executor};changes.progress_log={before:x.progress_log??null,after:y.progress_log};changes.people={before:a.people,after:b.people};}}
+    journal.push({timestamp:stamp,action,...ids,changes,patch,source:'admin',...(file?{file}:{}),updatedAt:{before:old,after:stamp}});return true;
+  }
+  function markChanged(action,ids={}){if(!recordChange(snapshot,state.board,action,ids)){renderAll();return;}snapshot=clone(state.board);state.dirty=true;state.advancedDirty=false;renderAll();window.dispatchEvent(new Event('board-admin-change'))}
   function setValidation(errors,scope='当前草稿'){
     const panel=$('#validation-panel');panel.classList.toggle('invalid',!!errors.length);
     panel.innerHTML=errors.length?`<details open><summary>${esc(scope)}：${errors.length} 项需要处理</summary><ul>${errors.slice(0,30).map(e=>`<li data-code="${esc(e.code)}">${esc(e.message)}</li>`).join('')}</ul>${errors.length>30?`<small>另有 ${errors.length-30} 项问题。</small>`:''}</details>`:`<strong>校验通过</strong> · 编号完整、依赖无环、日期顺序正确<small>修改仅在浏览器中；导出后需替换 site/data/board.json 并重新部署。</small>`;
@@ -34,7 +44,7 @@
     if(!state.board||state.repairOnly)return;
     renderSummary();
     $('#admin-filter-executor').innerHTML='<option value="">全部执行人</option><option value="__none__" '+(state.executor==='__none__'?'selected':'')+'>无执行人</option>'+options(state.board.people,state.executor);
-    renderTable();renderFramework();renderSettings();setValidation(boardErrors(state.board));
+    renderTable();renderFramework();renderSettings();renderClaims();setValidation(boardErrors(state.board));
     if(state.activeTab==='advanced'&&!state.advancedDirty)$('#json-editor').value=JSON.stringify(state.board,null,2);
     $('#add-task').disabled=false;
   }
@@ -161,7 +171,7 @@
     $('#save-task').disabled=!!errors.length;return errors;
   }
   function readTaskField(el){if(!state.editingTask)return;if(el.dataset.multi){const field=el.dataset.multi;state.editingTask[field]=$$(`[data-multi="${field}"]:checked`,$('#task-form')).map(box=>box.value);const count=state.editingTask[field].length;$(`#task-${field}-dropdown summary span`).textContent=count?'已选 '+count+' 项':'未选择';}else if(el.name){state.editingTask[el.name]=el.name==='participants'?el.value.split(/[,，\n]/).map(v=>v.trim()).filter(Boolean):el.value;}validateTask()}
-  function deleteTask(id){const candidate=clone(state.board);candidate.tasks=candidate.tasks.filter(t=>t.id!==id);const expenseErrors=window.ExpenseAdmin?.validateBoardReferences(candidate)||[];if(expenseErrors.length){toast(expenseErrors.map(e=>e.message).join('；'));return;}const refs=state.board.tasks.filter(t=>t.pre.includes(id)).map(t=>t.id);if(refs.length){toast('不能删除 '+id+'：先从 '+refs.join('、')+' 的前置中移除该编号。');return;}if(!confirm('删除任务 '+id+'？仅修改本地草稿。'))return;state.board.tasks=state.board.tasks.filter(t=>t.id!==id);markChanged();toast(id+' 已从本地草稿删除。')}
+  function deleteTask(id){const candidate=clone(state.board);candidate.tasks=candidate.tasks.filter(t=>t.id!==id);const expenseErrors=window.ExpenseAdmin?.validateBoardReferences(candidate)||[];if(expenseErrors.length){toast(expenseErrors.map(e=>e.message).join('；'));return;}if((state.board.claims||[]).some(c=>c.taskId===id)){toast('不能删除 '+id+'：该任务仍有认领申请。');return;}const refs=state.board.tasks.filter(t=>t.pre.includes(id)).map(t=>t.id);if(refs.length){toast('不能删除 '+id+'：先从 '+refs.join('、')+' 的前置中移除该编号。');return;}if(!confirm('删除任务 '+id+'？仅修改本地草稿。'))return;state.board.tasks=state.board.tasks.filter(t=>t.id!==id);markChanged('rm-task',{taskId:id});toast(id+' 已从本地草稿删除。')}
   function renderFramework(){
     const kind=state.frameworkKind,items=collection(kind);
     $('#add-framework').disabled=kind==='views'&&items.length>=4;
@@ -190,7 +200,7 @@
     const kind=state.frameworkKind,b=clone(state.board),list=collection(kind,b),index=list.findIndex(item=>item.id===id);list.splice(index,1);const errors=boardErrors(b);
     if(errors.length){toast('不能删除：'+errors.slice(0,3).map(e=>e.message).join('；'));return;}
     if(!confirm('删除'+collectionNames[kind]+'“'+id+'”？仅修改本地草稿。'))return;
-    state.board=b;markChanged();toast('配置已从本地草稿删除。');
+    state.board=b;markChanged(state.frameworkKind==='people'?'people':'framework');toast('配置已从本地草稿删除。');
   }
   function renderSettings(){
     $('#meta-form').innerHTML=metaFields.map(([path,label,type])=>{const value=path.startsWith('event.')?state.board.meta.event[path.slice(6)]:state.board.meta[path];return `<label class="${['title','event.name','event.venue'].includes(path)?'wide':''}"><span>${label}</span><input name="${path}" id="meta-${path.replace('.','-')}" type="${type||'text'}" value="${esc(value)}" required></label>`}).join('')+'<button class="primary form-submit" type="submit">保存活动信息</button>';
@@ -200,7 +210,7 @@
     if(state.activeTab==='advanced'&&state.advancedDirty&&tab!=='advanced'){if(!confirm('高级 JSON 尚未应用，离开将放弃此编辑区修改。'))return;state.advancedDirty=false;setValidation(boardErrors(state.board));}
     if(state.repairOnly&&tab!=='advanced'){toast('先修复 JSON 并应用，再使用可视化编辑。');return;}
     state.activeTab=tab;$$('[data-admin-tab]').forEach(button=>{const active=button.dataset.adminTab===tab;button.classList.toggle('active',active);button.setAttribute('aria-selected',String(active))});
-    for(const name of ['tasks','expenses','framework','advanced'])$('#tab-'+name).hidden=name!==tab;
+    for(const name of ['tasks','claims','expenses','framework','advanced'])$('#tab-'+name).hidden=name!==tab;
     for(const id of ['board-actions','admin-summary','validation-panel'])$('#'+id).hidden=tab==='expenses';window.dispatchEvent(new CustomEvent('board-admin-tab',{detail:tab}));
     if(tab==='advanced'&&!state.advancedDirty)$('#json-editor').value=JSON.stringify(state.board,null,2);
   }
@@ -208,8 +218,31 @@
     const errors=boardErrors(parsed);setValidation(errors,'高级 JSON');$('#apply-json').disabled=!!errors.length;return errors.length?null:parsed;
   }
   function store(key){try{localStorage.setItem(key,JSON.stringify(state.board,null,2));return true;}catch(e){toast('本地存储失败，请检查浏览器空间或直接导出 JSON。');return false;}}
-  function exportBoard(){if(boardErrors(state.board).length)return;const blob=new Blob([JSON.stringify(state.board,null,2)+'\n'],{type:'application/json;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='board.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('已导出 board.json；替换站点数据文件后重新部署。')}
-  async function importFile(file){if(!file)return;let text;try{text=await file.text();const data=JSON.parse(text),errors=boardErrors(data);if(errors.length){state.activeTab='advanced';$$('[data-admin-tab]').forEach(b=>b.classList.toggle('active',b.dataset.adminTab==='advanced'));for(const name of ['tasks','expenses','framework','advanced'])$('#tab-'+name).hidden=name!=='advanced';$('#json-editor').value=text;state.advancedDirty=true;validateJSON();toast('导入内容需要修正，已放入高级 JSON；当前草稿未替换。');return;}if(state.dirty&&!confirm('导入会替换当前本地草稿，继续？'))return;state.board=data;state.repairOnly=false;state.advancedDirty=false;markChanged();toast('已导入到本地草稿。');}catch(e){toast('导入失败：'+e.message)}}
+  function download(content,name,type){const url=URL.createObjectURL(new Blob([content],{type})),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+  function exportLog(){if(!journal.length){toast('暂无变更日志。');return;}const ordered=[...journal.filter(x=>x.file==='expenses.json'),...journal.filter(x=>x.file!=='expenses.json')];download(ordered.map(x=>JSON.stringify(x)).join('\n')+'\n','changelog-admin-'+bangkokMinute().replace(/[-: ]/g,'').replace(/(\d{8})(\d{4})/,'$1-$2')+'.jsonl','application/x-ndjson');}
+  function exportBoard(){if(boardErrors(state.board).length)return;if(journal.length&&!journal.some(x=>x.file!=='expenses.json')){const before=state.board.meta.updatedAt,stamp=nowBangkok();state.board.meta.updatedAt=stamp;journal.push({timestamp:stamp,action:'touch',changes:{},patch:[],source:'admin',updatedAt:{before,after:stamp}});snapshot=clone(state.board);state.dirty=true;renderAll();}const blob=new Blob([JSON.stringify(state.board,null,2)+'\n'],{type:'application/json;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='board.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);if(journal.length)setTimeout(exportLog,100);toast('已导出 board.json 和变更日志；请按页面命令导入。')}
+  async function importFile(file){if(!file)return;let text;try{text=await file.text();const data=JSON.parse(text),errors=boardErrors(data);if(errors.length){state.activeTab='advanced';$$('[data-admin-tab]').forEach(b=>b.classList.toggle('active',b.dataset.adminTab==='advanced'));for(const name of ['tasks','claims','expenses','framework','advanced'])$('#tab-'+name).hidden=name!=='advanced';$('#json-editor').value=text;state.advancedDirty=true;validateJSON();toast('导入内容需要修正，已放入高级 JSON；当前草稿未替换。');return;}if(state.dirty&&!confirm('导入会替换当前本地草稿，继续？'))return;journal=journal.filter(r=>r.file==='expenses.json');snapshot=clone(initialBoard);state.board=data;state.repairOnly=false;state.advancedDirty=false;markChanged('import');toast('已清空原看板日志并记录导入。');}catch(e){toast('导入失败：'+e.message)}}
+  function renderClaims(){
+    const b=state.board,claims=b.claims||[],cfg=BoardCore.claimsConfig(b),filter=$('#claim-filter'),value=filter.value;$('#tab-claims .claim-privacy').textContent=cfg.texts.adminPrivacy;
+    filter.innerHTML=[['','全部'],...Object.entries(cfg.texts.statusNames)].map(([id,name])=>`<option value="${esc(id)}">${esc(name)}（${id?claims.filter(c=>c.status===id).length:claims.length}）</option>`).join('');filter.value=value;
+    const selected=$('#claim-task').value;$('#claim-task').innerHTML=b.tasks.map(t=>`<option value="${esc(t.id)}" ${t.id===selected?'selected':''}>${esc(t.id+' · '+t.title)}</option>`).join('');if(!$('#claim-time').value)$('#claim-time').value=bangkokMinute().replace(' ','T');
+    const cell=(label,text,cls='')=>`<td data-label="${esc(label)}"${cls?` class="${cls}"`:''} title="${esc(text)}"><span class="claim-cell">${esc(text)}</span></td>`;
+    $('#claim-list').innerHTML=claims.filter(c=>!value||c.status===value).map(c=>`<tr class="claim-row claim-row-${esc(c.status)}">${cell('编号',c.id,'claim-id')}${cell('任务',c.taskId+' · '+(b.tasks.find(t=>t.id===c.taskId)?.title||''),'claim-task-cell')}${cell('昵称',c.nickname,'claim-nick')}${cell('留言',c.message,'claim-msg')}${cell('申请时间',c.createdAt,'claim-time')}<td data-label="状态" class="claim-state"><span class="claim-status claim-status-${esc(c.status)}">${esc(cfg.texts.statusNames[c.status])}</span></td>${cell('处理',(c.resolvedAt||'—')+' '+(c.resolvedBy||''),'claim-resolved')}<td data-label="操作" class="claim-ops">${c.status==='pending'?`<div class="claim-actions"><button type="button" class="claim-confirm-btn" data-claim-confirm="${esc(c.id)}">确认</button><button type="button" class="claim-reject-btn" data-claim-reject="${esc(c.id)}">拒绝</button></div>`:''}</td></tr>`).join('');
+  }
+  function addClaim(event){event.preventDefault();const b=state.board,cfg=BoardCore.claimsConfig(b),nickname=$('#claim-nickname').value.trim(),message=$('#claim-message').value.trim(),task=b.tasks.find(t=>t.id===$('#claim-task').value),time=$('#claim-time').value.replace('T',' '),err=$('#claim-error');
+    const issueField=BoardCore.privacyIssue(nickname)?['昵称',BoardCore.privacyIssue(nickname)]:BoardCore.privacyIssue(message)?['留言',BoardCore.privacyIssue(message)]:null,issue=issueField?cfg.texts.privacyBlock.replace('{field}',issueField[0]).replace('{issue}',issueField[1]):'';let problem=issue||(!cfg.enabled?'认领功能未启用':'')||(!task?'请选择任务':'')||(task&&b.framework.statuses.find(s=>s.id===task.status)?.isDone&&!cfg.allowDone?'已完成的任务不接受认领':'')||(task&&!cfg.allowAssigned&&task.executor.length?'已有执行人的任务不接受认领':'')||(!nickname||!message?'昵称和留言不能为空':'')||(Array.from(nickname).length>cfg.limits.nickname||Array.from(message).length>cfg.limits.message?'昵称或留言超过长度限制':'')||(!BoardCore.logTimeOK(time)?'申请时间无效':'');
+    if(problem){err.textContent=problem;return;}const candidate=clone(b),claims=candidate.claims=candidate.claims||[],id='CL'+String(Math.max(0,...claims.map(c=>Number(c.id.slice(2))))+1).padStart(3,'0');claims.push({id,taskId:task.id,nickname,message,createdAt:time,status:'pending',resolvedAt:null,resolvedBy:null});const errors=boardErrors(candidate);if(errors.length){err.textContent=errors.map(e=>e.message).join('；');return;}err.textContent='';state.board=candidate;markChanged('claim-add',{taskId:task.id,claimId:id});$('#claim-nickname').value='';$('#claim-message').value='';toast('认领申请已录入。');
+  }
+  let resolving=null;
+  function openClaim(id,action){const c=(state.board.claims||[]).find(x=>x.id===id);if(!c||c.status!=='pending')return;resolving={id,action};const people=state.board.people,exact=people.find(p=>p.id===c.nickname),matches=people.filter(p=>p.name===c.nickname||(p.aliases||[]).includes(c.nickname)),match=exact||(matches.length===1?matches[0]:null);
+    $('#claim-dialog-title').textContent=action==='confirm'?'确认认领':'拒绝认领';$('#claim-dialog-info').textContent=`${c.id} · ${c.nickname} · ${c.taskId}`;$('#claim-person').innerHTML=options(people,match?.id||'','请选择已有执行人');$('#claim-person-label').hidden=action!=='confirm';$('#claim-add-person-label').hidden=action!=='confirm'||!!match||matches.length>1;$('#claim-add-person').checked=!match&&matches.length<=1;$('#claim-new-name').textContent=c.nickname;$('#claim-by').value='管理员';$('#claim-note').value='';$('#claim-note-label').hidden=action!=='reject';$('#claim-resolve-error').textContent='';$('#claim-dialog').showModal();
+  }
+  function resolveClaim(event){event.preventDefault();const b=clone(state.board),c=(b.claims||[]).find(x=>x.id===resolving.id),task=b.tasks.find(t=>t.id===c.taskId),stamp=bangkokMinute(),by=$('#claim-by').value.trim()||'管理员',err=$('#claim-resolve-error');if(stamp<c.createdAt){err.textContent='处理时间不能早于申请时间。';return;}{const cfgx=BoardCore.claimsConfig(b);for(const [label,v] of [['昵称',c.nickname],['留言',c.message],['处理人',by],['备注',resolving.action==='reject'?$('#claim-note').value:'']]){const issue=BoardCore.privacyIssue(v||'');if(issue){err.textContent=cfgx.texts.privacyBlock.replace('{field}',label).replace('{issue}',issue);return;}}}c.status=resolving.action==='confirm'?'confirmed':'rejected';c.resolvedAt=stamp;c.resolvedBy=by;
+    if(resolving.action==='confirm'){let person=$('#claim-person').value;if(!$('#claim-add-person-label').hidden&&$('#claim-add-person').checked){person=c.nickname;const used=new Set(b.people.map(p=>p.color.toLowerCase())),colors=['#8A765D','#4A7C59','#A65D57','#5979A6','#8054A6','#B07935','#32817E'];let color=colors.find(x=>!used.has(x.toLowerCase()));if(!color){let i=0;while(used.has('#'+i.toString(16).padStart(6,'0')))i++;color='#'+i.toString(16).padStart(6,'0').toUpperCase();}b.people.push({id:person,name:person,color,aliases:[]});}if(!person){err.textContent='请选择或新增执行人。';return;}if(!task.executor.includes(person))task.executor.push(person);(task.progress_log=task.progress_log||[]).push({time:stamp,note:BoardCore.claimsConfig(b).texts.confirmLog.replace('{nickname}',c.nickname).replace('{claimId}',c.id),by});c.personId=person;
+    }else if($('#claim-note').value)c.note=$('#claim-note').value;
+    const errors=boardErrors(b);if(errors.length){err.textContent=errors.map(e=>e.message).join('；');return;}state.board=b;$('#claim-dialog').close();markChanged('claim-'+resolving.action,{taskId:task.id,claimId:c.id});toast('认领申请已处理。');
+  }
+
   function bind(){
     document.addEventListener('keydown',event=>{if(event.key==='Enter'&&event.target.matches('#log-time,#log-by,#log-status')){event.preventDefault();addLogEntry();}if(event.key==='Enter'&&event.target.matches('.sup-url,.sup-alt')){event.preventDefault();$('[data-action="log-image-supplement-ok"]')?.click();}if(event.key==='Enter'&&event.target.matches('.img-url,.img-alt')){event.preventDefault();}});
     document.addEventListener('input',event=>{const slot=event.target.closest?.('.img-slot');if(slot){$('#log-error').hidden=true;if(event.target.matches('.img-url'))slotPreview(slot);}});
@@ -217,6 +250,7 @@
     document.addEventListener('error',event=>{const img=event.target;if(!img.matches?.('.log-item-images img'))return;const box=document.createElement('span');box.className='admin-thumb-fallback';box.textContent=img.alt||'图片';box.title='图片无法加载：'+(img.alt||'');img.replaceWith(box);},true);
     document.addEventListener('change',event=>{const slot=event.target.closest?.('.img-slot');if(slot&&event.target.matches('.img-file'))slotPreview(slot);});
     document.addEventListener('click',event=>{
+      const claimButton=event.target.closest('[data-claim-confirm],[data-claim-reject]');if(claimButton){openClaim(claimButton.dataset.claimConfirm||claimButton.dataset.claimReject,claimButton.dataset.claimConfirm?'confirm':'reject');return;}
       const stChip=event.target.closest('[data-admin-status]');if(stChip){const id=stChip.dataset.adminStatus,set=new Set(state.statuses);set.has(id)?set.delete(id):set.add(id);state.statuses=StatusUI.ordered(state.board.framework.statuses).filter(x=>set.has(x));renderTable();return;}
       if(event.target.closest('[data-admin-status-clear]')){state.statuses=[];renderTable();return;}
       const taskEdit=event.target.closest('[data-edit-task]');if(taskEdit){openTask(taskEdit.dataset.editTask);return;}
@@ -238,13 +272,15 @@
       if(action==='close-task')$('#task-editor').close();
       if(action==='add-framework')openFramework();
       if(action==='close-framework')$('#framework-editor').close();
-      if(action==='save-draft'&&store(DRAFT_KEY))toast('本地草稿已保存，站点数据未改变。');
-      if(action==='restore-draft'){let raw;try{raw=localStorage.getItem(DRAFT_KEY);}catch(e){toast('无法读取本地存储。');return;}if(!raw){toast('没有已保存的本地草稿。');return;}if(state.dirty&&!confirm('恢复将替换当前本地修改，继续？'))return;try{const candidate=JSON.parse(raw),errors=boardErrors(candidate);if(errors.length){toast('保存的草稿校验失败，请通过导入或高级 JSON 修正。');return;}state.board=candidate;state.repairOnly=false;state.advancedDirty=false;state.dirty=true;renderAll();toast('已恢复本地草稿。');}catch(e){toast('本地草稿不是有效 JSON。');}}
+      if(action==='save-draft'&&store(DRAFT_KEY)&&(localStorage.setItem(JOURNAL_KEY,JSON.stringify(journal.filter(r=>r.file!=='expenses.json'))),true))toast('本地草稿已保存，站点数据未改变。');
+      if(action==='restore-draft'){let raw;try{raw=localStorage.getItem(DRAFT_KEY);}catch(e){toast('无法读取本地存储。');return;}if(!raw){toast('没有已保存的本地草稿。');return;}if(state.dirty&&!confirm('恢复将替换当前本地修改，继续？'))return;try{const candidate=JSON.parse(raw),errors=boardErrors(candidate);if(errors.length){toast('保存的草稿校验失败，请通过导入或高级 JSON 修正。');return;}state.board=candidate;snapshot=clone(candidate);journal=[...journal.filter(r=>r.file==='expenses.json'),...JSON.parse(localStorage.getItem(JOURNAL_KEY)||'[]').filter(r=>r.file!=='expenses.json')];state.repairOnly=false;state.advancedDirty=false;state.dirty=true;renderAll();toast('已恢复本地草稿和变更日志。');}catch(e){toast('本地草稿不是有效 JSON。');}}
       if(action==='import')$('#import-file').click();
       if(action==='export')exportBoard();
+      if(action==='export-log')exportLog();
+      if(action==='close-claim')$('#claim-dialog').close();
       if(action==='preview'&&!boardErrors(state.board).length){if(window.ExpenseAdmin){window.ExpenseAdmin.preview(false);}else if(store(BoardCore.PREVIEW_KEY)){window.open('index.html?preview=1','_blank','noopener');toast('已打开本地预览；公开展示站仍读取原数据。');}}
       if(action==='reset-json'){if(state.advancedDirty&&!confirm('放弃编辑区尚未应用的内容？'))return;$('#json-editor').value=JSON.stringify(state.board,null,2);state.advancedDirty=false;validateJSON();}
-      if(action==='apply-json'){const candidate=validateJSON();if(!candidate)return;state.board=candidate;state.repairOnly=false;state.advancedDirty=false;markChanged();toast('JSON 已应用到本地草稿。');}
+      if(action==='apply-json'){const candidate=validateJSON();if(!candidate)return;state.board=candidate;state.repairOnly=false;state.advancedDirty=false;markChanged('advanced-json');toast('JSON 已应用到本地草稿。');}
     });
     document.addEventListener('input',event=>{
       const el=event.target;
@@ -257,25 +293,28 @@
     });
     document.addEventListener('change',event=>{
       const el=event.target;
+      if(el.id==='claim-filter')renderClaims();
+      if(el.id==='claim-person'&&el.value)$('#claim-add-person').checked=false;
       if(el.id==='admin-filter-executor'){state.executor=el.value;renderTable();}
       if(el.id==='framework-kind'){state.frameworkKind=el.value;renderFramework();}
-      if(el.dataset.inlineStatus){const task=state.board.tasks.find(t=>t.id===el.dataset.inlineStatus);if(task.status!==el.value){task.status=el.value;markChanged();toast(task.id+' 状态已更新到本地草稿。');}}
+      if(el.dataset.inlineStatus){const task=state.board.tasks.find(t=>t.id===el.dataset.inlineStatus);if(task.status!==el.value){task.status=el.value;markChanged('set',{taskId:task.id});toast(task.id+' 状态已更新到本地草稿。');}}
       if(el.closest('#task-form')&&(el.name||el.dataset.multi))readTaskField(el);
       if(el.closest('#framework-form')&&el.name)readFrameworkField(el);
-      if(el.dataset.themeColor){state.board.framework.colors[el.dataset.themeColor]=el.value;markChanged();}
+      if(el.dataset.themeColor){state.board.framework.colors[el.dataset.themeColor]=el.value;markChanged('framework');}
       if(el.id==='import-file'){importFile(el.files[0]);el.value='';}
     });
-    $('#task-form').addEventListener('submit',event=>{event.preventDefault();if(validateTask().length)return;state.board=taskCandidates();$('#task-editor').close();markChanged();toast('任务已保存到本地草稿。');});
-    $('#framework-form').addEventListener('submit',event=>{event.preventDefault();if(validateFramework().length)return;state.board=entityCandidate();$('#framework-editor').close();markChanged();toast('配置已保存到本地草稿。');});
-    $('#meta-form').addEventListener('submit',event=>{event.preventDefault();const candidate=clone(state.board);for(const [path]of metaFields){const value=new FormData(event.target).get(path);if(path.startsWith('event.'))candidate.meta.event[path.slice(6)]=value;else candidate.meta[path]=value;}const errors=boardErrors(candidate);if(errors.length){setValidation(errors,'活动信息');return;}state.board=candidate;markChanged();toast('活动信息已保存到本地草稿。');});
+    $('#claim-form').addEventListener('submit',addClaim);$('#claim-resolve-form').addEventListener('submit',resolveClaim);
+    $('#task-form').addEventListener('submit',event=>{event.preventDefault();if(validateTask().length)return;const previous=state.board.tasks.find(t=>t.id===state.taskOriginal),oldLog=previous?.progress_log||[],newLog=state.editingTask.progress_log||[];let taskAction=state.taskOriginal?'set':'add-task';if(previous&&JSON.stringify(oldLog)!==JSON.stringify(newLog))taskAction=newLog.length>oldLog.length?'log':newLog.length<oldLog.length?'log-rm':'log-edit';state.board=taskCandidates();$('#task-editor').close();markChanged(taskAction,{taskId:state.editingTask.id});toast('任务已保存到本地草稿。');});
+    $('#framework-form').addEventListener('submit',event=>{event.preventDefault();if(validateFramework().length)return;state.board=entityCandidate();$('#framework-editor').close();markChanged(state.frameworkKind==='people'?'people':'framework');toast('配置已保存到本地草稿。');});
+    $('#meta-form').addEventListener('submit',event=>{event.preventDefault();const candidate=clone(state.board);for(const [path]of metaFields){const value=new FormData(event.target).get(path);if(path.startsWith('event.'))candidate.meta.event[path.slice(6)]=value;else candidate.meta[path]=value;}const errors=boardErrors(candidate);if(errors.length){setValidation(errors,'活动信息');return;}state.board=candidate;markChanged('framework');toast('活动信息已保存到本地草稿。');});
     $('#colors-form').addEventListener('submit',event=>event.preventDefault());
     window.addEventListener('beforeunload',event=>{if(state.dirty||state.advancedDirty){event.preventDefault();event.returnValue='';}});
   }
   async function init(){
     bind();
-    try{state.board=await BoardCore.loadBoard();const errors=BoardCore.validate(state.board);if(errors.length){state.repairOnly=true;$('#board-title').textContent='数据需要修正';$('#data-state').textContent='数据校验未通过';$('#add-task').disabled=true;state.activeTab='advanced';for(const name of ['tasks','expenses','framework','advanced'])$('#tab-'+name).hidden=name!=='advanced';$$('[data-admin-tab]').forEach(b=>{b.classList.toggle('active',b.dataset.adminTab==='advanced');b.setAttribute('aria-selected',String(b.dataset.adminTab==='advanced'))});$('#json-editor').value=JSON.stringify(state.board,null,2);state.advancedDirty=true;validateJSON();return;}renderAll();}
+    try{state.board=await BoardCore.loadBoard();snapshot=clone(state.board);initialBoard=clone(state.board);const errors=BoardCore.validate(state.board);if(errors.length){state.repairOnly=true;$('#board-title').textContent='数据需要修正';$('#data-state').textContent='数据校验未通过';$('#add-task').disabled=true;state.activeTab='advanced';for(const name of ['tasks','claims','expenses','framework','advanced'])$('#tab-'+name).hidden=name!=='advanced';$$('[data-admin-tab]').forEach(b=>{b.classList.toggle('active',b.dataset.adminTab==='advanced');b.setAttribute('aria-selected',String(b.dataset.adminTab==='advanced'))});$('#json-editor').value=JSON.stringify(state.board,null,2);state.advancedDirty=true;validateJSON();return;}renderAll();}
     catch(e){$('.admin-app').innerHTML='<section class="fatal"><h1>无法打开管理后台</h1><p>'+esc(e.message)+'</p><p>在项目目录运行 python3 -m http.server 8000 --directory site，再打开 http://localhost:8000/admin.html。</p></section>';}
   }
-  window.BoardAdmin={getState:()=>state,notify:toast,switchTab,refresh:renderAll,validate:boardErrors,ready:null};
+  window.BoardAdmin={recordChange, exportLog, getJournal:()=>journal, setJournal:j=>{journal=j}, saveJournal:()=>localStorage.setItem(EXPENSE_JOURNAL_KEY,JSON.stringify(journal.filter(r=>r.file==='expenses.json'))), getState:()=>state,notify:toast,switchTab,refresh:renderAll,validate:boardErrors,ready:null};
   window.BoardAdmin.ready=init();
 })();

@@ -2,6 +2,7 @@
   'use strict';
   const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
   const core=window.ExpensesCore, esc=core.escapeHTML, clone=v=>JSON.parse(JSON.stringify(v));
+  let snapshot=null,initialData=null;
   const state={data:null,dirty:false,section:'entries',filters:{search:'',category:'',status:'',payer:'',task:''},editing:null,originalId:null,configKind:'categories',entity:null,entityId:null,loadError:''};
   const configNames={categories:'类目',statuses:'状态',payers:'付款人'};
   const note=text=>BoardAdmin.notify(text), board=()=>BoardAdmin.getState().board;
@@ -47,7 +48,7 @@
     $('#expense-admin-updated').textContent='费用更新时间 '+state.data.meta.updatedAt.replace('T',' ').replace('+07:00','')+' · 曼谷时间';
     $('#add-expense').disabled=false;displayValidation();renderTable();renderConfig();
   }
-  function changed(){state.dirty=true;state.data.meta.updatedAt=core.nowBangkok();renderAll();BoardAdmin.refresh()}
+  function changed(action,ids={}){if(BoardAdmin.recordChange(snapshot,state.data,action,ids,'expenses.json')){snapshot=clone(state.data);state.dirty=true;}renderAll();BoardAdmin.refresh()}
   function field(key,label,value,opts={}){
     const a=`id="expense-${key}" name="${key}"`, wide=opts.wide?'span-two':'';
     let control=opts.select?`<select ${a}>${selectOptions(opts.select,value,opts.empty)}</select>`:opts.textarea?`<textarea ${a} rows="${opts.rows||3}">${esc(value??'')}</textarea>`:`<input ${a} value="${esc(value??'')}" ${opts.readonly?'readonly':''} ${opts.decimal?'inputmode="decimal"':''} ${opts.placeholder?'placeholder="'+esc(opts.placeholder)+'"':''}>`;
@@ -74,7 +75,7 @@
     else if(el.name){state.editing[el.name]=['budgetUnitPrice','budgetSubtotal','actual'].includes(el.name)?moneyInput(el.value):el.value;}
     validateEditor();
   }
-  function removeExpense(id){if(!confirm('删除费用 '+id+'？仅修改费用本地草稿。'))return;state.data.expenses=state.data.expenses.filter(e=>e.id!==id);changed();note(id+' 已从费用草稿删除。')}
+  function removeExpense(id){if(!confirm('删除费用 '+id+'？仅修改费用本地草稿。'))return;state.data.expenses=state.data.expenses.filter(e=>e.id!==id);changed('expense-rm',{expenseId:id});note(id+' 已从费用草稿删除。')}
   function configCandidate(){const data=clone(state.data),list=data.config[state.configKind],i=list.findIndex(e=>e.id===state.entityId);if(i<0)list.push(clone(state.entity));else list[i]=clone(state.entity);return data}
   function validateConfig(){const errors=checked(configCandidate());$('#expense-config-validation').innerHTML=listErrors(errors);$('#save-expense-config').disabled=!!errors.length;return errors}
   function openConfig(id){
@@ -86,19 +87,19 @@
   function readConfig(el){if(!state.entity||!el.name)return;state.entity[el.name]=el.name==='aliases'?el.value.split(/[,，\n]/).map(x=>x.trim()).filter(Boolean):el.value;validateConfig()}
   function removeConfig(id){
     const data=clone(state.data);data.config[state.configKind]=data.config[state.configKind].filter(e=>e.id!==id);const errors=checked(data);if(errors.length){note('不能删除：'+errors.slice(0,3).map(e=>e.message).join('；'));return;}
-    if(!confirm('删除费用'+configNames[state.configKind]+'“'+name(state.configKind,id)+'”？'))return;state.data=data;if(state.filters[{categories:'category',statuses:'status',payers:'payer'}[state.configKind]]===id)state.filters[{categories:'category',statuses:'status',payers:'payer'}[state.configKind]]='';changed();note('费用配置已删除。');
+    if(!confirm('删除费用'+configNames[state.configKind]+'“'+name(state.configKind,id)+'”？'))return;state.data=data;if(state.filters[{categories:'category',statuses:'status',payers:'payer'}[state.configKind]]===id)state.filters[{categories:'category',statuses:'status',payers:'payer'}[state.configKind]]='';changed('expense-config');note('费用配置已删除。');
   }
   function saveLocal(key,data){try{localStorage.setItem(key,JSON.stringify(data,null,2));return true;}catch(error){note('本地存储失败，请直接导出费用 JSON。');return false;}}
-  function exportExpenses(){if(checked().length)return;const blob=new Blob([JSON.stringify(state.data,null,2)+'\n'],{type:'application/json;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='expenses.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);note('已导出 expenses.json；替换站点费用数据文件后生效。')}
+  function exportExpenses(){if(checked().length)return;const blob=new Blob([JSON.stringify(state.data,null,2)+'\n'],{type:'application/json;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='expenses.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);if(BoardAdmin.getJournal().length){setTimeout(()=>BoardAdmin.exportLog(),100);note('已导出 expenses.json 和变更日志；在仓库里运行 python3 tools/board.py import-admin --expenses 下载的expenses.json --log 下载的日志.jsonl（有任务改动时再加 --board）。');}else note('已导出 expenses.json；替换站点费用数据文件后生效。')}
   function preview(expensesTab=true){
     if(!state.data||checked().length||BoardCore.validate(board()).length){note('请先修正任务与费用草稿的校验问题。');return;}
     if(!saveLocal(BoardCore.PREVIEW_KEY,board())||!saveLocal(core.PREVIEW_KEY,state.data))return;
     window.open('index.html?preview=1&expenses-preview=1'+(expensesTab?'#expenses':''),'_blank','noopener');note('已打开任务与费用的本地预览；普通展示站读取站点数据。');
   }
   async function importExpenses(file){
-    if(!file)return;try{const data=JSON.parse(await file.text()),errors=checked(data);if(errors.length){note('费用导入校验失败：'+errors.slice(0,3).map(e=>e.message).join('；'));return;}if(state.dirty&&!confirm('导入将替换当前费用草稿，继续？'))return;state.data=data;state.filters={search:'',category:'',status:'',payer:'',task:''};$('#expense-admin-search').value='';changed();note('已导入费用草稿，任务数据保持原样。');}catch(error){note('无法导入费用 JSON：'+error.message);}
+    if(!file)return;try{const data=JSON.parse(await file.text()),errors=checked(data);if(errors.length){note('费用导入校验失败：'+errors.slice(0,3).map(e=>e.message).join('；'));return;}if(state.dirty&&!confirm('导入将替换当前费用草稿，继续？'))return;BoardAdmin.setJournal(BoardAdmin.getJournal().filter(r=>r.file!=='expenses.json'));snapshot=clone(initialData);state.data=data;state.filters={search:'',category:'',status:'',payer:'',task:''};$('#expense-admin-search').value='';changed('import');note('已清空原费用日志并记录导入。');}catch(error){note('无法导入费用 JSON：'+error.message);}
   }
-  function restoreDraft(){let raw;try{raw=localStorage.getItem(core.DRAFT_KEY);}catch(error){note('无法读取费用本地草稿。');return;}if(!raw){note('没有保存的费用草稿。');return;}try{const data=JSON.parse(raw),errors=checked(data);if(errors.length){note('费用草稿校验失败：'+errors.slice(0,3).map(e=>e.message).join('；'));return;}if(state.dirty&&!confirm('恢复将替换当前费用修改，继续？'))return;state.data=data;state.dirty=true;renderAll();BoardAdmin.refresh();note('已恢复费用本地草稿。');}catch(error){note('费用本地草稿不是有效 JSON。');}}
+  function restoreDraft(){let raw;try{raw=localStorage.getItem(core.DRAFT_KEY);}catch(error){note('无法读取费用本地草稿。');return;}if(!raw){note('没有保存的费用草稿。');return;}try{const data=JSON.parse(raw),errors=checked(data);if(errors.length){note('费用草稿校验失败：'+errors.slice(0,3).map(e=>e.message).join('；'));return;}if(state.dirty&&!confirm('恢复将替换当前费用修改，继续？'))return;state.data=data;snapshot=clone(data);const saved=JSON.parse(localStorage.getItem('cmi-expense-journal-v10')||'[]');BoardAdmin.setJournal([...BoardAdmin.getJournal().filter(r=>r.file!=='expenses.json'),...saved.filter(r=>r.file==='expenses.json')]);state.dirty=true;renderAll();BoardAdmin.refresh();note('已恢复费用草稿和日志。');}catch(error){note('费用本地草稿不是有效 JSON。');}}
   function switchSection(section){state.section=section;$('#expense-entries-section').hidden=section!=='entries';$('#expense-config-section').hidden=section!=='config';$$('[data-expense-section]').forEach(b=>{b.classList.toggle('active',b.dataset.expenseSection===section);b.setAttribute('aria-pressed',String(b.dataset.expenseSection===section));});}
   function bind(){
     document.addEventListener('click',event=>{
@@ -112,7 +113,7 @@
       if(action==='close-editor'){$('#expense-editor').close();return;}if(action==='close-config'){$('#expense-config-editor').close();return;}
       if(action==='import'){$('#expense-import-file').click();return;}if(!state.data)return;
       if(action==='add')openExpense();if(action==='add-config')openConfig();if(action==='export')exportExpenses();if(action==='preview')preview();if(action==='restore-draft')restoreDraft();
-      if(action==='save-draft'&&!checked().length&&saveLocal(core.DRAFT_KEY,state.data))note('费用草稿已保存到当前浏览器。');
+      if(action==='save-draft'&&!checked().length&&saveLocal(core.DRAFT_KEY,state.data)&&(BoardAdmin.saveJournal(),true))note('费用草稿已保存到当前浏览器。');
     });
     document.addEventListener('input',event=>{
       const el=event.target;if(el.id==='expense-admin-search'){state.filters.search=el.value.trim();renderTable();}
@@ -129,14 +130,14 @@
       if(el.id==='expense-config-kind'){state.configKind=el.value;renderConfig();}
       if(el.id==='expense-import-file'){importExpenses(el.files[0]);el.value='';}
     });
-    $('#expense-form').addEventListener('submit',event=>{event.preventDefault();if(validateEditor().length)return;state.editing.updatedAt=core.nowBangkok();state.data=candidateExpense();$('#expense-editor').close();changed();note('费用已保存到本地草稿。');});
-    $('#expense-config-form').addEventListener('submit',event=>{event.preventDefault();if(validateConfig().length)return;state.data=configCandidate();$('#expense-config-editor').close();changed();note('费用配置已保存到本地草稿。');});
+    $('#expense-form').addEventListener('submit',event=>{event.preventDefault();if(validateEditor().length)return;state.editing.updatedAt=core.nowBangkok();state.data=candidateExpense();$('#expense-editor').close();changed(state.originalId?'expense-set':'expense-add',{expenseId:state.editing.id});note('费用已保存到本地草稿。');});
+    $('#expense-config-form').addEventListener('submit',event=>{event.preventDefault();if(validateConfig().length)return;state.data=configCandidate();$('#expense-config-editor').close();changed('expense-config');note('费用配置已保存到本地草稿。');});
     window.addEventListener('board-admin-change',()=>{if(state.data)renderAll()});
     window.addEventListener('beforeunload',event=>{if(state.dirty){event.preventDefault();event.returnValue='';}});
   }
   async function init(){
     bind();await BoardAdmin.ready;
-    try{state.data=await core.loadExpenses();const errors=checked();if(errors.length){state.loadError=errors[0].message;$('#expense-admin-validation').classList.add('invalid');$('#expense-admin-validation').innerHTML='<strong>费用数据需要修正</strong>'+listErrors(errors);['save-expense-draft','preview-expenses','export-expenses','add-expense','add-expense-config'].forEach(id=>$('#'+id).disabled=true);$('#expense-data-state').textContent='费用数据校验未通过';state.data=null;return;}renderAll();BoardAdmin.refresh();}
+    try{state.data=await core.loadExpenses();snapshot=clone(state.data);initialData=clone(state.data);const errors=checked();if(errors.length){state.loadError=errors[0].message;$('#expense-admin-validation').classList.add('invalid');$('#expense-admin-validation').innerHTML='<strong>费用数据需要修正</strong>'+listErrors(errors);['save-expense-draft','preview-expenses','export-expenses','add-expense','add-expense-config'].forEach(id=>$('#'+id).disabled=true);$('#expense-data-state').textContent='费用数据校验未通过';state.data=null;return;}renderAll();BoardAdmin.refresh();}
     catch(error){state.loadError=error.message;$('#expense-admin-validation').classList.add('invalid');$('#expense-admin-validation').textContent='无法读取费用：'+error.message;$('#expense-data-state').textContent='费用载入失败';['save-expense-draft','preview-expenses','export-expenses','add-expense','add-expense-config'].forEach(id=>$('#'+id).disabled=true);}
   }
   window.ExpenseAdmin={getState:()=>state,validateBoardReferences,preview,ready:null};

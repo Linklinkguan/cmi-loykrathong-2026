@@ -1,0 +1,35 @@
+/* 认领入口、列表与弹层 */
+.claim-action{position:sticky;bottom:0;padding:12px 18px max(12px,env(safe-area-inset-bottom));background:var(--surface,#fffaf2);border-top:1px solid var(--line,#e0d2bf);z-index:4}
+.claim-action p{margin:0;color:var(--muted,#806d5a);font-size:12px;text-align:center}
+.claim-primary{display:block;width:100%;min-height:44px;border:0;border-radius:9px;background:var(--brown,#5a4636);color:#fff;font-weight:700;font-size:15px;text-align:center;padding:12px;cursor:pointer;text-decoration:none}
+.claim-detail>div{margin-top:10px;padding:9px;background:var(--paper,#f6efe6);border-radius:8px;overflow-wrap:anywhere}.claim-detail p{margin:4px 0;white-space:pre-wrap}
+#claim-dialog,#claim-card-dialog{width:min(94vw,520px);max-height:90dvh;border:0;border-radius:16px;padding:22px;background:var(--surface,#fffaf2);color:var(--ink,#3a2e25);box-shadow:0 16px 60px #0004;overflow:auto}
+#claim-dialog::backdrop,#claim-card-dialog::backdrop{background:#2a2018a6}
+.claim-dialog-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.claim-dialog-head h2{margin:0;font-size:22px}.claim-dialog-head button,#claim-card-close,#claim-back{border:1px solid var(--line,#ddd);border-radius:8px;background:transparent;color:inherit;padding:9px 15px;cursor:pointer}
+#claim-task{font-weight:700;overflow-wrap:anywhere}#claim-form label{display:block;font-weight:700;margin-top:16px}#claim-form input,#claim-form textarea{display:block;width:100%;box-sizing:border-box;margin-top:6px;padding:10px;border:1px solid var(--line,#cbb);border-radius:8px;background:#fff;color:inherit;font:inherit}#claim-form textarea{resize:vertical}#claim-form [aria-invalid=true]{border-color:#b33;outline:1px solid #b33}.claim-count{text-align:right;font-size:12px;margin:4px 0;color:var(--muted)}.claim-privacy{font-size:13px;line-height:1.6;color:var(--muted)}#claim-error{color:#a32929;font-size:13px}.claim-card-content{text-align:center}.claim-card-content img{display:block;max-width:100%;max-height:65dvh;margin:auto;object-fit:contain}.claim-card-content p{font-size:14px}.claim-card-content button{margin:12px 3px 0;min-height:44px}
+.claims-workspace{overflow:auto}#claims{max-width:760px;margin:0 auto;padding:24px}#claims h2{font-size:22px}.claim-item{padding:16px;margin:12px 0;background:var(--surface,#fffaf2);border:1px solid var(--line,#ddd);border-radius:10px;overflow-wrap:anywhere}.claim-item-meta{display:flex;justify-content:space-between;color:var(--muted);font-size:12px;gap:10px}.claim-task-link{border:0;background:none;color:var(--brown);font:inherit;font-weight:700;text-align:left;padding:8px 0;cursor:pointer;text-decoration:underline}.claim-item p{margin:4px 0}.claim-message{white-space:pre-wrap}.claim-processed,.claim-empty{color:var(--muted);font-size:13px}
+@media(max-width:800px){.sticky-top .view-nav .tabs{overflow-x:auto;white-space:nowrap;flex-wrap:nowrap}#claims{padding:16px}.claim-action{padding-left:16px;padding-right:16px}}
+
+/* v10 细节：待确认列表与卡片弹层文案层级 */
+.claim-intro{margin:-4px 0 6px;color:var(--muted,#8c7867);font-size:13px}
+.claim-pill{font-style:normal;margin-left:8px;padding:1px 8px;border-radius:999px;border:1px solid var(--claim-pending);color:var(--claim-pending-text);font-size:11px;font-weight:700}
+.claim-who{display:flex;align-items:baseline;gap:8px}.claim-who small{color:var(--muted,#8c7867);font-size:12px}.claim-who b{font-size:16px;color:var(--brown,#5a4636)}
+#claim-share-hint{order:-1;margin:12px 0 4px;font-weight:800;color:var(--brown,#5a4636);font-size:16px;text-align:center}
+.claim-save-tip{margin:0 0 10px;color:var(--muted,#8c7867);font-size:12.5px;text-align:center}
+.claim-card-content{display:flex;flex-direction:column}
+.claim-card-content #claim-card-img{order:-2;width:100%;height:auto;border-radius:10px}
+
+/* v10.1：状态色统一（待确认琥珀、已确认绿、已拒绝灰）；手机待确认横幅；详情底部留白 */
+:root{--claim-pending:#C98A2B;--claim-pending-text:#946116;--claim-pending-bg:#FBF1DE;--claim-confirmed:#2F6B3B;--claim-rejected:#5E5A55}
+.tab.tab-claims.has-pending{color:var(--claim-pending-text)}
+.tab.tab-claims.has-pending[aria-selected=true]{color:var(--claim-pending-text);border-color:var(--claim-pending)}
+.claim-banner{display:flex;align-items:center;justify-content:center;width:100%;height:32px;margin:0;padding:0 16px;box-sizing:border-box;border:0;border-top:1px solid #EAD3A8;border-bottom:1px solid #EAD3A8;background:var(--claim-pending-bg);color:var(--claim-pending-text);font:inherit;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.claim-banner[hidden]{display:none}
+#detail-content:has(.claim-action) .detail-body{padding-bottom:calc(var(--claim-button-h) + 24px + env(safe-area-inset-bottom,0px))}
+:root{--claim-button-h:48px}
+.claim-primary{display:flex;align-items:center;justify-content:center;box-sizing:border-box;height:var(--claim-button-h);min-height:0;padding:0 12px;line-height:1}
+@media(max-width:800px){.sticky-top .view-nav .tabs .tab-claims.has-pending{order:-1}}
+.claim-warning{margin:10px 0 0;padding:10px 12px;border:1.5px solid var(--claim-pending);border-radius:8px;background:var(--claim-pending-bg);color:#6E4A0E;font-size:13.5px;font-weight:700;line-height:1.55;white-space:pre-line;text-align:left}
+.claim-warning[hidden]{display:none}
+#claim-form .has-privacy-warning{border-color:var(--claim-pending);outline:1px solid var(--claim-pending)}
+#claim-form .claim-warning{margin-bottom:12px}

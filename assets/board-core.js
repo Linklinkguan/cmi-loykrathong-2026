@@ -53,6 +53,94 @@
   }
   function imageAltError(v){if(typeof v!=='string'||!v.trim())return 'alt（图片说明）必填';if([...v].length>MAX_ALT)return 'alt 不能超过 '+MAX_ALT+' 个字';return '';}
   function logTimeOK(v){if(typeof v!=='string'||!/^\d{4}-\d{2}-\d{2} (?:[01]\d|2[0-3]):[0-5]\d$/.test(v))return false;return dateOK(v.slice(0,10));}
+
+  const CLAIMS_DEFAULT = {"enabled": true, "allowDone": false, "allowAssigned": true, "limits": {"nickname": 24, "message": 240}, "boardUrl": "", "logo": "", "logoAlt": "", "logoWidth": 150, "texts": {"button": "我要认领", "formTitle": "认领这项任务", "nicknameLabel": "认领人名字", "nicknameHint": "填微信昵称", "messageLabel": "留言", "messageHint": "写为什么想认领、打算怎么解决", "privacy": "公开可见：只填微信昵称。留言里尽量不要写手机号、身份证号、邮箱、微信号——卡片仍能生成，但管理员录入时会删掉这类信息，公开页面不会出现。", "privacyWarn": "提醒：{field}里{issue}。卡片仍可生成、发到群里，但管理员录入时会删掉这类信息，公开看板上不会出现；建议先删掉再生成。", "cardPrivacyNote": "含联系方式等隐私信息，管理员录入时会删掉", "privacyBlock": "{field}里{issue}，会写进公开仓库，请先删掉隐私信息再录入", "shareHint": "把卡片发到活动群，等管理员确认", "cardStatus": "待管理员确认", "qrHint": "扫码查看任务详情", "banner": "{n} 条认领等待确认 →", "assignedNote": "这项任务已有执行人", "cardTitle": "任务认领申请", "viewName": "等待认领确认", "viewTab": "待确认", "viewIntro": "以下认领申请等待管理员核对确认；点任务名称可查看详情。", "adminPrivacy": "公开可见，只录微信昵称；昵称、留言里的手机号、身份证号、邮箱、微信号必须先删掉才能录入", "confirmLog": "认领确认：{nickname} 加入执行人（{claimId}）", "statusNames": {"pending": "待确认", "confirmed": "已确认", "rejected": "已拒绝"}}};
+  function claimsConfig(board) {
+    function merge(base, extra) {
+      const out=clone(base);
+      if(obj(extra)) for(const [k,v] of Object.entries(extra)) out[k]=obj(out[k])&&obj(v)?merge(out[k],v):clone(v);
+      return out;
+    }
+    return merge(CLAIMS_DEFAULT,board?.framework?.claims);
+  }
+  function privacyIssue(text) {
+    text=text.replace(/[0-9]{4}[-/.年][0-9]{1,2}[-/.月][0-9]{1,2}日?|[0-9]{1,2}[:：][0-9]{2}/g,'');
+    if (/(?:[0-9][\u0009-\u000d\u001c-\u0020\u0085\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\-()（）.]*){7,}/.test(text)) return '看起来像电话号码或长串数字';
+    if (/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/.test(text)) return '看起来像邮箱';
+    if (/(?:wxid_|微信号[:：])[A-Za-z0-9]+/.test(text)) return '看起来像微信号';
+    return '';
+  }
+  function clone(v){return v === undefined ? undefined : JSON.parse(JSON.stringify(v));}
+  function equal(a,b){
+    if(a===b)return true;
+    if(Array.isArray(a)&&Array.isArray(b))return a.length===b.length&&a.every((v,i)=>equal(v,b[i]));
+    if(obj(a)&&obj(b)){const ak=Object.keys(a),bk=Object.keys(b);return ak.length===bk.length&&ak.every(k=>own(b,k)&&equal(a[k],b[k]));}
+    return false;
+  }
+  function keyCompare(a,b){const x=Array.from(a,c=>c.codePointAt(0)),y=Array.from(b,c=>c.codePointAt(0));for(let i=0;i<Math.min(x.length,y.length);i++)if(x[i]!==y[i])return x[i]-y[i];return x.length-y.length;}
+  function jsonPatch(before,after){
+    const patch=[], escape=k=>k.replace(/~/g,'~0').replace(/\//g,'~1');
+    function walk(a,b,path){
+      if(obj(a)&&obj(b)){
+        const ak=Object.keys(a),bk=Object.keys(b);
+        for(const k of ak.filter(k=>!own(b,k)).sort(keyCompare))patch.push({op:'remove',path:path+'/'+escape(k),old:clone(a[k])});
+        for(const k of bk.filter(k=>!own(a,k)).sort(keyCompare))patch.push({op:'add',path:path+'/'+escape(k),value:clone(b[k])});
+        for(const k of ak.filter(k=>own(b,k)).sort(keyCompare))walk(a[k],b[k],path+'/'+escape(k));
+      }else if(Array.isArray(a)&&Array.isArray(b)){
+        if(a.length===b.length){for(let i=0;i<a.length;i++)walk(a[i],b[i],path+'/'+i);}
+        else {let prefix=0,suffix=0;while(prefix<Math.min(a.length,b.length)&&equal(a[prefix],b[prefix]))prefix++;
+          while(suffix<Math.min(a.length,b.length)-prefix&&equal(a[a.length-1-suffix],b[b.length-1-suffix]))suffix++;
+          for(let i=a.length-suffix-1;i>=prefix;i--)patch.push({op:'remove',path:path+'/'+i,old:clone(a[i])});
+          for(let i=prefix;i<b.length-suffix;i++)patch.push({op:'add',path:path+'/'+i,value:clone(b[i])});
+          for(let j=0;j<suffix;j++)walk(a[a.length-suffix+j],b[b.length-suffix+j],path+'/'+(b.length-suffix+j));
+        }
+      }else if(!equal(a,b))patch.push({op:'replace',path,value:clone(b),old:clone(a)});
+    }
+    walk(before,after,'');return patch;
+  }
+  function applyPatch(document,patch){
+    let doc=clone(document);
+    for(const op of patch){const {path}=op,kind=op.op;if(!['add','remove','replace'].includes(kind)||typeof path!=='string'||(path&&!path.startsWith('/')))throw Error('无效补丁');
+      if(!path){if(kind!=='add'&&!equal(doc,op.old))throw Error('补丁旧值不匹配');doc=kind==='remove'?null:clone(op.value);continue;}
+      const parts=path.slice(1).split('/');if(parts.some(p=>/~(?![01])/.test(p)))throw Error('无效路径');
+      const keys=parts.map(p=>p.replace(/~1/g,'/').replace(/~0/g,'~'));let parent=doc;
+      for(const key of keys.slice(0,-1)){if(Array.isArray(parent)&&(!/^(0|[1-9][0-9]*)$/.test(key)||Number(key)>=parent.length))throw Error('无效数组下标');if(parent===null||typeof parent!=='object'||!own(parent,key))throw Error('补丁路径无效');parent=parent[key];}
+      let key=keys[keys.length-1];
+      if(Array.isArray(parent)){if(!/^(0|[1-9][0-9]*)$/.test(key))throw Error('无效数组下标');key=Number(key);if(key>parent.length||(kind!=='add'&&key===parent.length))throw Error('数组下标越界');if(kind!=='add'&&!equal(parent[key],op.old))throw Error('补丁旧值不匹配');if(kind==='add')parent.splice(key,0,clone(op.value));else if(kind==='remove')parent.splice(key,1);else parent[key]=clone(op.value);}
+      else if(obj(parent)){if(kind!=='add'&&(!own(parent,key)||!equal(parent[key],op.old)))throw Error('补丁旧值不匹配');if(kind==='remove')delete parent[key];else Object.defineProperty(parent,key,{value:clone(op.value),writable:true,enumerable:true,configurable:true});}
+      else throw Error('补丁路径无效');
+    }return doc;
+  }
+  function claimErrors(board, tasks, people){
+    const errors=[], cfg=board.framework?.claims;
+    const err=m=>errors.push({code:'claims',message:m});
+    if(cfg!==undefined&&!obj(cfg)){err('framework.claims：必须为对象');return errors;}
+    const c=cfg||{}, ce=m=>err('framework.claims：'+m);
+    for(const k of ['enabled','allowDone','allowAssigned'])if(own(c,k)&&typeof c[k]!=='boolean')ce(k+' 必须为布尔值');
+    for(const k of ['boardUrl','logo','logoAlt'])if(own(c,k)&&typeof c[k]!=='string')ce(k+' 必须为字符串');
+    if(own(c,'logoWidth')&&(!Number.isInteger(c.logoWidth)||c.logoWidth<40||c.logoWidth>400))ce('logoWidth 必须为 40–400 的整数');
+    if(own(c,'limits')&&!obj(c.limits))ce('limits 必须为对象');
+    const limits=obj(c.limits)?c.limits:{};for(const k of ['nickname','message'])if(own(limits,k)&&(!Number.isInteger(limits[k])||limits[k]<1))ce('limits.'+k+' 必须为正整数');
+    if(own(c,'texts')&&!obj(c.texts))ce('texts 必须为对象');
+    if(obj(c.texts))for(const [k,v] of Object.entries(c.texts)){if(k==='statusNames'){if(!obj(v)||Object.values(v).some(x=>!nonempty(x)))ce('statusNames 必须为非空字符串对象');}else if(typeof v!=='string')ce('texts.'+k+' 必须为字符串');}
+    if(!own(board,'claims'))return errors;if(!Array.isArray(board.claims)){err('claims：必须为数组');return errors;}
+    const seen=new Set(), config=claimsConfig(board);
+    for(const claim of board.claims){if(!obj(claim)){err('claims：条目必须为对象');continue;}const at='claims '+(claim.id||'（无编号）')+'：', e=m=>err(at+m);
+      if(typeof claim.id!=='string'||!/^CL[0-9]{3,}$/.test(claim.id))e('编号格式应为 CL 加至少三位数字');
+      if(seen.has(claim.id))e('编号重复');seen.add(claim.id);
+      if(!tasks.has(claim.taskId))e('任务编号不存在');
+      for(const field of ['nickname','message']){const v=claim[field];let limit=config.limits?.[field];if(!Number.isInteger(limit)||limit<1)limit=CLAIMS_DEFAULT.limits[field];
+        if(!nonempty(v))e(field+' 不能为空');else if(Array.from(v).length>limit)e(field+' 不能超过 '+limit+' 个字符');if(typeof v==='string'&&privacyIssue(v))e(field+'：'+privacyIssue(v));}
+      for(const field of ['note','resolvedBy'])if(typeof claim[field]==='string'&&privacyIssue(claim[field]))e(field+'：'+privacyIssue(claim[field]));
+      if(!logTimeOK(claim.createdAt))e('createdAt 格式不正确');
+      if(!['pending','confirmed','rejected'].includes(claim.status))e('status 无效');
+      else if(claim.status==='pending'){if(claim.resolvedAt!=null||claim.resolvedBy!=null)e('待确认时处理时间和处理人必须为空');}
+      else {if(!logTimeOK(claim.resolvedAt))e('resolvedAt 格式不正确');else if(logTimeOK(claim.createdAt)&&claim.resolvedAt<claim.createdAt)e('处理时间不能早于申请时间');if(!nonempty(claim.resolvedBy))e('resolvedBy 不能为空');}
+      if(own(claim,'personId')&&(claim.status!=='confirmed'||!people.has(claim.personId)))e('personId 必须指向已确认申请的现有执行人');
+      if(own(claim,'note')&&(typeof claim.note!=='string'||Array.from(claim.note).length>200))e('note 必须为不超过 200 字的字符串');
+      if(Object.keys(claim).some(k=>!['id','taskId','nickname','message','createdAt','status','resolvedAt','resolvedBy','personId','note'].includes(k)))e('含未知字段');
+    }return errors;
+  }
   function validate(board) {
     const errors = [];
     const error = (code, message, taskId, field) => errors.push({code, message, ...(taskId ? {taskId} : {}), ...(field ? {field} : {})});
@@ -170,6 +258,7 @@
         });
       }
     }
+    errors.push(...claimErrors(board,tasks,collections.people));
     for (const [id,t] of tasks) if (Array.isArray(t.pre)) for (const pre of t.pre) {
       if (!tasks.has(pre)) error('dangling',id+' 的前置编号不存在：'+String(pre),id,'pre');
       else {
@@ -207,5 +296,5 @@
     if (!response.ok) throw new Error('读取 board.json 失败：HTTP '+response.status);
     try {return await response.json();} catch(e) {throw new Error('board.json 不是有效的 JSON 文件。');}
   }
-  root.BoardCore=Object.freeze({validate,deriveSuccessors,loadBoard,safeIconMarkup,PREVIEW_KEY,dateOK,logTimeOK,httpsUrlError,imageSrcError,imageAltError,MAX_IMAGES,MAX_ALT});
+  root.BoardCore=Object.freeze({claimsConfig,privacyIssue,jsonPatch,applyPatch,validate,deriveSuccessors,loadBoard,safeIconMarkup,PREVIEW_KEY,dateOK,logTimeOK,httpsUrlError,imageSrcError,imageAltError,MAX_IMAGES,MAX_ALT});
 })(window);
