@@ -60,7 +60,43 @@
     $('#task-executor-control').innerHTML=multiSelect('executor',b.people,t.executor);
     $('#task-threads-control').innerHTML=multiSelect('threads',b.framework.threads,t.threads);
     $('#task-pre-control').innerHTML=multiSelect('pre',b.tasks.filter(item=>item.id!==t.id),t.pre);
+    $('#log-time').value='';$('#log-note').value='';$('#log-by').value='';$('#log-error').hidden=true;renderLogEditor();
     validateTask();$('#task-editor').showModal();$('#task-editor').scrollTop=0;
+  }
+  // v7：进度记录。时间一律为曼谷时间 YYYY-MM-DD HH:MM；条目只在保存任务到草稿时写入。
+  function bangkokMinute(){return nowBangkok().slice(0,16).replace('T',' ')}
+  // v7.1：后台状态标签沿用前台状态色（浅底＋同色细边，文字压到对比度≥4.6）
+  function hexRGB(h){h=h.replace('#','');return [0,2,4].map(i=>parseInt(h.slice(i,i+2),16))}
+  function mixHex(a,b,t){const x=hexRGB(a),y=hexRGB(b);return '#'+x.map((v,i)=>Math.round(v+(y[i]-v)*t).toString(16).padStart(2,'0')).join('')}
+  function lum(h){return hexRGB(h).map(v=>{v/=255;return v<=0.03928?v/12.92:((v+0.055)/1.055)**2.4}).reduce((s,v,i)=>s+v*[0.2126,0.7152,0.0722][i],0)}
+  function contrastHex(a,b){const x=lum(a),y=lum(b);return (Math.max(x,y)+0.05)/(Math.min(x,y)+0.05)}
+  function statusPillStyle(id){const st=(state.board.framework.statuses||[]).find(s=>s.id===id);if(!st||!/^#[0-9a-f]{6}$/i.test(st.color||''))return '';const tint=mixHex(st.color,'#ffffff',0.86);let c=st.color;for(let t=0;t<=1&&contrastHex(c,tint)<4.6;t+=0.05)c=mixHex(st.color,'#2a2018',t);return `color:${c};background:${tint};border-color:${st.color}66`}
+  function renderLogEditor(){
+    const t=state.editingTask,b=state.board;if(!t)return;
+    $('#log-status').innerHTML='<option value="">仅记录</option>'+options(b.framework.statuses,'');
+    $('#log-by-options').innerHTML=b.people.map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('');
+    if(!$('#log-time').value)$('#log-time').value=bangkokMinute().replace(' ','T');
+    const list=(t.progress_log||[]).map((e,i)=>({...e,i})).sort((a,c)=>c.time.localeCompare(a.time)||c.i-a.i);
+    $('#progress-admin-list').innerHTML=list.length?list.map(e=>`<li><div><strong>${esc(e.time)}</strong>${e.status?`<span class="log-status-pill" style="${statusPillStyle(e.status)}">${esc(labelFor('statuses',e.status))}</span>`:'<span class="log-status-pill quiet">仅记录</span>'}${e.by?`<span class="log-by">${esc(e.by)}</span>`:''}<p>${esc(e.note)}</p></div><button type="button" class="danger-link" data-action="log-delete" data-log-index="${e.i}" aria-label="删除 ${esc(e.time)} 的进度记录">删除</button></li>`).join(''):'<li class="empty">还没有进度记录。</li>';
+  }
+  function addLogEntry(){
+    const t=state.editingTask;if(!t)return;
+    const raw=$('#log-time').value,time=raw.replace('T',' ').slice(0,16),note=$('#log-note').value.trim(),status=$('#log-status').value,by=$('#log-by').value.trim();
+    const fail=msg=>{$('#log-error').textContent=msg;$('#log-error').hidden=false};
+    if(!BoardCore.logTimeOK(time))return fail('时间格式不正确，请选择曼谷时间的日期和时刻。');
+    if(!note)return fail('备注不能为空。');
+    $('#log-error').hidden=true;
+    const entry={time};if(status)entry.status=status;entry.note=note;if(by)entry.by=by;
+    (t.progress_log=t.progress_log||[]).push(entry);
+    if(status){t.status=status;$('#task-status').value=status;}
+    $('#log-note').value='';$('#log-status').value='';$('#log-time').value=bangkokMinute().replace(' ','T');
+    renderLogEditor();validateTask();toast('已追加进度记录'+(status?'，任务状态改为「'+labelFor('statuses',status)+'」':'')+'。点「保存任务到草稿」后生效。');
+  }
+  function deleteLogEntry(index){
+    const t=state.editingTask;if(!t||!t.progress_log||!t.progress_log[index])return;
+    const e=t.progress_log[index];if(!confirm('确定删除这条进度记录吗？\n'+e.time+'　'+e.note.slice(0,40)+'\n删除后不能撤回（保存到草稿前可点「取消」放弃整次编辑）；任务状态不会自动回退。'))return;
+    t.progress_log.splice(index,1);if(!t.progress_log.length)delete t.progress_log;
+    renderLogEditor();validateTask();
   }
   function validateTask(){
     const errors=boardErrors(taskCandidates());
@@ -118,6 +154,7 @@
   function exportBoard(){if(boardErrors(state.board).length)return;const blob=new Blob([JSON.stringify(state.board,null,2)+'\n'],{type:'application/json;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='board.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('已导出 board.json；替换站点数据文件后重新部署。')}
   async function importFile(file){if(!file)return;let text;try{text=await file.text();const data=JSON.parse(text),errors=boardErrors(data);if(errors.length){state.activeTab='advanced';$$('[data-admin-tab]').forEach(b=>b.classList.toggle('active',b.dataset.adminTab==='advanced'));for(const name of ['tasks','expenses','framework','advanced'])$('#tab-'+name).hidden=name!=='advanced';$('#json-editor').value=text;state.advancedDirty=true;validateJSON();toast('导入内容需要修正，已放入高级 JSON；当前草稿未替换。');return;}if(state.dirty&&!confirm('导入会替换当前本地草稿，继续？'))return;state.board=data;state.repairOnly=false;state.advancedDirty=false;markChanged();toast('已导入到本地草稿。');}catch(e){toast('导入失败：'+e.message)}}
   function bind(){
+    document.addEventListener('keydown',event=>{if(event.key==='Enter'&&event.target.matches('#log-time,#log-by,#log-status')){event.preventDefault();addLogEntry();}});
     document.addEventListener('click',event=>{
       const taskEdit=event.target.closest('[data-edit-task]');if(taskEdit){openTask(taskEdit.dataset.editTask);return;}
       const taskDelete=event.target.closest('[data-delete-task]');if(taskDelete){deleteTask(taskDelete.dataset.deleteTask);return;}
@@ -126,6 +163,9 @@
       const tab=event.target.closest('[data-admin-tab]');if(tab){switchTab(tab.dataset.adminTab);return;}
       const button=event.target.closest('[data-action]');if(!button||button.disabled)return;const action=button.dataset.action;
       if(action==='add-task')openTask();
+      if(action==='log-add')addLogEntry();
+      if(action==='log-now')$('#log-time').value=bangkokMinute().replace(' ','T');
+      if(action==='log-delete')deleteLogEntry(Number(button.dataset.logIndex));
       if(action==='close-task')$('#task-editor').close();
       if(action==='add-framework')openFramework();
       if(action==='close-framework')$('#framework-editor').close();

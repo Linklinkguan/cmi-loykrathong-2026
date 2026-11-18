@@ -34,6 +34,7 @@
     if ([...doc.documentElement.childNodes].some(n => n.nodeType !== 1 && n.textContent.trim())) return '';
     return [...doc.documentElement.children].map(el => new XMLSerializer().serializeToString(el)).join('');
   }
+  function logTimeOK(v){if(typeof v!=='string'||!/^\d{4}-\d{2}-\d{2} (?:[01]\d|2[0-3]):[0-5]\d$/.test(v))return false;return dateOK(v.slice(0,10));}
   function validate(board) {
     const errors = [];
     const error = (code, message, taskId, field) => errors.push({code, message, ...(taskId ? {taskId} : {}), ...(field ? {field} : {})});
@@ -126,6 +127,21 @@
       }
       for (const [field,name] of [['executor','people'],['threads','threads']]) if (Array.isArray(t[field])) for (const ref of t[field]) if (!collections[name].has(ref)) error('reference',id+' 的 '+field+' 引用不存在：'+String(ref),id,field);
       for (const field of ['successors','post']) if (own(t,field)) error('derived',id+' 不得存储 '+field+'；后置从 pre 推导',id,field);
+      // 进度记录（可选）：曼谷时间 YYYY-MM-DD HH:MM；状态为空或已配置的状态；备注不能为空
+      if (own(t,'progress_log')) {
+        if (!Array.isArray(t.progress_log)) error('shape',id+' progress_log 必须是数组',id,'progress_log');
+        else t.progress_log.forEach((e,i)=>{
+          const where=id+' 进度记录第 '+(i+1)+' 条';
+          if (!obj(e)) {error('shape',where+'必须是对象',id,'progress_log');return;}
+          const extra=Object.keys(e).filter(k=>!['time','status','note','by'].includes(k));
+          if (extra.length) error('shape',where+'含未知字段：'+extra.join('、'),id,'progress_log');
+          if (!logTimeOK(e.time)) error('time',where+'时间格式不正确，应为曼谷时间 YYYY-MM-DD HH:MM',id,'progress_log');
+          const st=e.status==null?'':e.status;
+          if (typeof st!=='string'||(st&&!collections.statuses.has(st))) error('reference',where+'状态只能为空或已配置的状态',id,'progress_log');
+          if (!nonempty(e.note)) error('required',where+'备注不能为空',id,'progress_log');
+          if (own(e,'by')&&!nonempty(e.by)) error('required',where+'记录人如填写则不能为空',id,'progress_log');
+        });
+      }
     }
     for (const [id,t] of tasks) if (Array.isArray(t.pre)) for (const pre of t.pre) {
       if (!tasks.has(pre)) error('dangling',id+' 的前置编号不存在：'+String(pre),id,'pre');
@@ -164,5 +180,5 @@
     if (!response.ok) throw new Error('读取 board.json 失败：HTTP '+response.status);
     try {return await response.json();} catch(e) {throw new Error('board.json 不是有效的 JSON 文件。');}
   }
-  root.BoardCore=Object.freeze({validate,deriveSuccessors,loadBoard,safeIconMarkup,PREVIEW_KEY,dateOK});
+  root.BoardCore=Object.freeze({validate,deriveSuccessors,loadBoard,safeIconMarkup,PREVIEW_KEY,dateOK,logTimeOK});
 })(window);

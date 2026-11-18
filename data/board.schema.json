@@ -617,9 +617,43 @@
           "type": "string"
         },
         "successors": false,
-        "post": false
+        "post": false,
+        "progress_log": {
+          "type": "array",
+          "description": "可选。进度记录，按保存顺序；没有记录的任务不写此字段。时间为曼谷时间。",
+          "items": {
+            "$ref": "#/$defs/progressEntry"
+          }
+        }
       },
       "additionalProperties": true
+    },
+    "progressEntry": {
+      "type": "object",
+      "required": [
+        "time",
+        "note"
+      ],
+      "properties": {
+        "time": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}$",
+          "description": "曼谷时间 YYYY-MM-DD HH:MM"
+        },
+        "status": {
+          "type": "string",
+          "description": "空或省略＝只记录不改状态；否则为 framework.statuses 的编号"
+        },
+        "note": {
+          "type": "string",
+          "minLength": 1
+        },
+        "by": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
     }
   }
 }

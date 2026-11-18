@@ -485,3 +485,31 @@ html{scroll-padding-top:calc(var(--sticky-height) + 10px)}
   .filter-context>.context-search:empty{display:none}
   .filter-context>.context-search{font-size:11px;line-height:18px;padding-bottom:3px;margin:0}
 }
+
+/* V7：进度记录（任务详情时间线，最新在上）＋卡片上的「有记录」小点（不增加卡片高度） */
+.progress-section h3 svg{color:#6f5c4c}
+.progress-timeline{list-style:none;margin:8px 0 0;padding:0;position:relative}
+.progress-item{position:relative;padding:0 0 12px 20px}
+.progress-item:before{content:"";position:absolute;left:5px;top:14px;bottom:-2px;width:2px;background:#e3d5c2;border-radius:1px}
+.progress-item:last-child{padding-bottom:2px}
+.progress-item:last-child:before{display:none}
+.progress-item:after{content:"";position:absolute;left:0;top:4px;width:8px;height:8px;border-radius:50%;background:#fffcf6;border:2px solid var(--dot,#9b8670)}
+.progress-item.is-latest:after{background:var(--dot,#9b8670)}
+.progress-meta{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;min-height:18px}
+.progress-meta time{font-size:12px;font-weight:700;color:#5a4636;font-variant-numeric:tabular-nums;letter-spacing:.2px}
+.progress-status{font-size:11px;line-height:17px;padding:0 6px;border-radius:9px;border:1px solid;font-weight:700}
+.progress-by{font-size:11px;color:#6f5c4c}
+.progress-by:before{content:"· "}
+.progress-note{margin:3px 0 0;font-size:13px;line-height:1.65;color:var(--ink);overflow-wrap:anywhere;white-space:pre-line}
+.progress-item.is-latest .progress-note{background:#fff6e8;border:1px solid #efdcc2;border-radius:7px;padding:6px 9px}
+
+@media(max-width:800px){
+  .progress-item{padding-left:22px}
+  .progress-meta time{font-size:12.5px}
+  .progress-note{font-size:14px;line-height:1.7}
+}
+.progress-section h3 small{color:#6f5c4c}
+/* v7.1：卡片「有进度记录」时钟图标（替换 v7 绿点），与进度记录标题同一图标 */
+.log-mark{display:inline-flex;align-items:center;justify-content:center;width:10px;height:10px;margin-left:4px;color:#6f5c4c;vertical-align:-1px;line-height:0;flex:none}
+.log-mark svg{width:10px;height:10px;display:block}
+.legend-log .log-mark{margin:0 4px 0 0}
