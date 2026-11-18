@@ -34,6 +34,24 @@
     if ([...doc.documentElement.childNodes].some(n => n.nodeType !== 1 && n.textContent.trim())) return '';
     return [...doc.documentElement.children].map(el => new XMLSerializer().serializeToString(el)).join('');
   }
+  // v8：进度记录配图。仓库图片只能由 board.py --image 入库；浏览器只查路径格式，不查文件是否存在。
+  const MAX_IMAGES=2,MAX_ALT=80,MAX_URL=500;
+  const REPO_IMAGE_RE=/^assets\/progress\/[A-Za-z0-9][A-Za-z0-9._-]*\.(?:jpe?g|png|webp)$/;
+  function httpsUrlError(v){
+    if(typeof v!=='string'||!v)return '链接不能为空';
+    if(v.length>MAX_URL)return '链接不能超过 '+MAX_URL+' 个字符';
+    if(!v.startsWith('https://'))return '外链必须以 https:// 开头';
+    if(/[\s"'<>\\`]/.test(v)||/[\u0000-\u001f]/.test(v))return '链接里不能有空白、引号、尖括号或反斜杠';
+    let u;try{u=new URL(v);}catch(e){return '链接格式不正确';}
+    if(u.protocol!=='https:'||!u.hostname||u.username||u.password||/^https:\/\/[^/?#]*@/.test(v))return '链接必须是 https://主机/路径，且不能带用户名或口令';
+    return '';
+  }
+  function imageSrcError(v){
+    if(typeof v!=='string'||!v)return 'src 不能为空';
+    if(v.startsWith('assets/'))return REPO_IMAGE_RE.test(v)&&!v.includes('..')?'':'仓库图片路径只能是 assets/progress/文件名.jpg|jpeg|png|webp';
+    return httpsUrlError(v);
+  }
+  function imageAltError(v){if(typeof v!=='string'||!v.trim())return 'alt（图片说明）必填';if([...v].length>MAX_ALT)return 'alt 不能超过 '+MAX_ALT+' 个字';return '';}
   function logTimeOK(v){if(typeof v!=='string'||!/^\d{4}-\d{2}-\d{2} (?:[01]\d|2[0-3]):[0-5]\d$/.test(v))return false;return dateOK(v.slice(0,10));}
   function validate(board) {
     const errors = [];
@@ -133,13 +151,22 @@
         else t.progress_log.forEach((e,i)=>{
           const where=id+' 进度记录第 '+(i+1)+' 条';
           if (!obj(e)) {error('shape',where+'必须是对象',id,'progress_log');return;}
-          const extra=Object.keys(e).filter(k=>!['time','status','note','by'].includes(k));
+          const extra=Object.keys(e).filter(k=>!['time','status','note','by','images'].includes(k));
           if (extra.length) error('shape',where+'含未知字段：'+extra.join('、'),id,'progress_log');
           if (!logTimeOK(e.time)) error('time',where+'时间格式不正确，应为曼谷时间 YYYY-MM-DD HH:MM',id,'progress_log');
           const st=e.status==null?'':e.status;
           if (typeof st!=='string'||(st&&!collections.statuses.has(st))) error('reference',where+'状态只能为空或已配置的状态',id,'progress_log');
           if (!nonempty(e.note)) error('required',where+'备注不能为空',id,'progress_log');
           if (own(e,'by')&&!nonempty(e.by)) error('required',where+'记录人如填写则不能为空',id,'progress_log');
+          if (own(e,'images')) {
+            const im=e.images;
+            if (!Array.isArray(im)||im.length<1||im.length>MAX_IMAGES) error('shape',where+'图片应为 1–'+MAX_IMAGES+' 张的数组（没有图时省略 images）',id,'progress_log');
+            else im.forEach((g,j)=>{const at=where+'第 '+(j+1)+' 张图片';
+              if (!obj(g)) {error('shape',at+'必须是对象',id,'progress_log');return;}
+              const bad=Object.keys(g).filter(k=>k!=='src'&&k!=='alt');if (bad.length) error('shape',at+'含未知字段：'+bad.join('、'),id,'progress_log');
+              const se=imageSrcError(g.src);if (se) error('shape',at+'：'+se,id,'progress_log');
+              const ae=imageAltError(g.alt);if (ae) error('required',at+'：'+ae,id,'progress_log');});
+          }
         });
       }
     }
@@ -180,5 +207,5 @@
     if (!response.ok) throw new Error('读取 board.json 失败：HTTP '+response.status);
     try {return await response.json();} catch(e) {throw new Error('board.json 不是有效的 JSON 文件。');}
   }
-  root.BoardCore=Object.freeze({validate,deriveSuccessors,loadBoard,safeIconMarkup,PREVIEW_KEY,dateOK,logTimeOK});
+  root.BoardCore=Object.freeze({validate,deriveSuccessors,loadBoard,safeIconMarkup,PREVIEW_KEY,dateOK,logTimeOK,httpsUrlError,imageSrcError,imageAltError,MAX_IMAGES,MAX_ALT});
 })(window);

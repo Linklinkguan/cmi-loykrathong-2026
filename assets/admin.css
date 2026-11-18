@@ -23,3 +23,41 @@
 .log-by{font-size:11px;color:#6f5c4c}
 .danger-link{background:none;border:1px solid #e7c3b8;color:#a8492f;border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer;flex:none}
 @media(max-width:650px){.progress-add{grid-template-columns:1fr 1fr}.progress-add label:first-child{grid-column:1/-1}}
+/* v8：进度记录配图（后台只贴 https 链接；本地文件只预览） */
+.progress-add-images{grid-column:1/-1;margin:0;padding:10px 0 0;border:0;border-top:1px dashed #e3d3bd;display:grid;gap:8px;min-width:0}
+.progress-add-images legend{padding:0;font-size:12px;color:#6f5c4c;float:left;width:100%;margin-bottom:6px}
+.img-slot{display:grid;grid-template-columns:80px minmax(0,1fr);gap:10px;align-items:start;border:1px solid var(--line);border-radius:10px;background:#fff;padding:8px}
+.img-slot[hidden]{display:none}
+.img-slot-preview{width:80px;height:60px;border-radius:6px;border:1px solid #efdcc2;background:#f3eadf;overflow:hidden;display:flex;align-items:center;justify-content:center;color:#6f5c4c;font-size:11px;text-align:center}
+.img-slot-preview img{width:100%;height:100%;object-fit:cover;object-position:center top;display:block}
+.img-slot-preview img[hidden],.img-slot-preview span[hidden]{display:none}
+.img-slot-fields{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:6px 8px;min-width:0}
+.img-slot-fields label{display:grid;gap:3px;font-size:12px;color:#6f5c4c;min-width:0}
+.img-slot-tools{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+.file-pick{position:relative;display:inline-flex;align-items:center;min-height:32px;padding:0 12px;border:1px solid #d8c5ae;border-radius:8px;background:#fffaf2;color:var(--brown);font-size:12px;cursor:pointer}
+.file-pick input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
+.file-pick:focus-within{outline:2px solid var(--brown);outline-offset:2px}
+.img-local-note{font-size:11px;color:#6f5c4c}
+.more-image{justify-self:start;min-height:32px;padding:0 12px;border:1px dashed #cdb497;border-radius:8px;background:#fffaf2;color:var(--brown);font-size:12px}
+.more-image[hidden]{display:none}
+.link-button{background:none;border:0;padding:4px 2px;color:#5a4636;text-decoration:underline;text-underline-offset:3px;font-size:12px;cursor:pointer}
+.img-format-note{margin:0;font-size:11.5px;line-height:1.6;color:#6f5c4c}
+.img-format-note code{font-size:11px;background:#f3eadf;border-radius:4px;padding:0 3px;color:#5a4636;overflow-wrap:anywhere}
+.img-public-note{margin:0;padding:7px 10px;border-radius:8px;background:#fbe3dc;border:1px solid #efc2b4;color:#7a3322;font-size:12px;line-height:1.6}
+.log-item-main{min-width:0;flex:1}
+.log-item-actions{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex:none}
+.log-item-images{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.log-item-images figure{position:relative;margin:0;width:80px}
+.log-item-images img{display:block;width:80px;height:60px;object-fit:cover;object-position:center top;border-radius:6px;border:1px solid #efdcc2;background:#f3eadf}
+.log-item-images figcaption{font-size:10.5px;line-height:1.35;color:#6f5c4c;margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.image-remove{position:absolute;top:-6px;right:-6px;width:24px;height:24px;border-radius:50%;border:1px solid #d8c5ae;background:#fff;color:#a8492f;font-size:15px;line-height:1;padding:0;cursor:pointer}
+.log-supplement{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) auto auto;gap:6px;margin-top:6px}
+.log-supplement .sup-error{grid-column:1/-1}
+@media(max-width:650px){
+  .img-slot{grid-template-columns:64px minmax(0,1fr)}
+  .img-slot-preview{width:64px;height:48px}
+  .img-slot-fields{grid-template-columns:1fr}
+  .log-supplement{grid-template-columns:1fr 1fr}
+  .log-supplement input{grid-column:1/-1}
+}
+.admin-thumb-fallback{display:flex;align-items:center;justify-content:center;width:80px;height:60px;border-radius:6px;border:1px solid #efdcc2;background:#F3EADF;color:#6f5c4c;font-size:10.5px;line-height:1.3;padding:4px;text-align:center;overflow:hidden;overflow-wrap:anywhere}

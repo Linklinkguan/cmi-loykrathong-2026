@@ -60,7 +60,7 @@
     $('#task-executor-control').innerHTML=multiSelect('executor',b.people,t.executor);
     $('#task-threads-control').innerHTML=multiSelect('threads',b.framework.threads,t.threads);
     $('#task-pre-control').innerHTML=multiSelect('pre',b.tasks.filter(item=>item.id!==t.id),t.pre);
-    $('#log-time').value='';$('#log-note').value='';$('#log-by').value='';$('#log-error').hidden=true;renderLogEditor();
+    $('#log-time').value='';$('#log-note').value='';$('#log-by').value='';$('#log-error').hidden=true;state.supplementIndex=null;resetImageSlots();renderLogEditor();
     validateTask();$('#task-editor').showModal();$('#task-editor').scrollTop=0;
   }
   // v7：进度记录。时间一律为曼谷时间 YYYY-MM-DD HH:MM；条目只在保存任务到草稿时写入。
@@ -77,7 +77,7 @@
     $('#log-by-options').innerHTML=b.people.map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('');
     if(!$('#log-time').value)$('#log-time').value=bangkokMinute().replace(' ','T');
     const list=(t.progress_log||[]).map((e,i)=>({...e,i})).sort((a,c)=>c.time.localeCompare(a.time)||c.i-a.i);
-    $('#progress-admin-list').innerHTML=list.length?list.map(e=>`<li><div><strong>${esc(e.time)}</strong>${e.status?`<span class="log-status-pill" style="${statusPillStyle(e.status)}">${esc(labelFor('statuses',e.status))}</span>`:'<span class="log-status-pill quiet">仅记录</span>'}${e.by?`<span class="log-by">${esc(e.by)}</span>`:''}<p>${esc(e.note)}</p></div><button type="button" class="danger-link" data-action="log-delete" data-log-index="${e.i}" aria-label="删除 ${esc(e.time)} 的进度记录">删除</button></li>`).join(''):'<li class="empty">还没有进度记录。</li>';
+    $('#progress-admin-list').innerHTML=list.length?list.map(e=>{const imgs=Array.isArray(e.images)?e.images:[];return `<li><div class="log-item-main"><strong>${esc(e.time)}</strong>${e.status?`<span class="log-status-pill" style="${statusPillStyle(e.status)}">${esc(labelFor('statuses',e.status))}</span>`:'<span class="log-status-pill quiet">仅记录</span>'}${e.by?`<span class="log-by">${esc(e.by)}</span>`:''}<p>${esc(e.note)}</p>${imgs.length?`<div class="log-item-images">${imgs.map((g,j)=>`<figure><img src="${esc(g.src)}" alt="${esc(g.alt)}" loading="lazy"${/^https:/.test(g.src)?' referrerpolicy="no-referrer"':''}><figcaption>${esc(g.alt)}</figcaption><button type="button" class="image-remove" data-action="log-image-remove" data-log-index="${e.i}" data-image-index="${j}" aria-label="去掉这张：${esc(g.alt)}" title="去掉这张">×</button></figure>`).join('')}</div>`:''}${state.supplementIndex===e.i?`<div class="log-supplement"><input class="sup-url" type="url" placeholder="https://… 图片链接" aria-label="补图链接"><input class="sup-alt" maxlength="80" placeholder="图片说明（必填）" aria-label="补图说明"><button type="button" class="primary" data-action="log-image-supplement-ok" data-log-index="${e.i}">加上</button><button type="button" data-action="log-image-supplement-cancel">取消</button><p class="progress-add-error sup-error" role="alert" hidden></p></div>`:''}</div><div class="log-item-actions">${imgs.length<BoardCore.MAX_IMAGES&&state.supplementIndex!==e.i?`<button type="button" class="link-button" data-action="log-image-supplement" data-log-index="${e.i}">补图</button>`:''}<button type="button" class="danger-link" data-action="log-delete" data-log-index="${e.i}" aria-label="删除 ${esc(e.time)} 的进度记录">删除</button></div></li>`}).join(''):'<li class="empty">还没有进度记录。</li>';
   }
   function addLogEntry(){
     const t=state.editingTask;if(!t)return;
@@ -86,11 +86,58 @@
     if(!BoardCore.logTimeOK(time))return fail('时间格式不正确，请选择曼谷时间的日期和时刻。');
     if(!note)return fail('备注不能为空。');
     $('#log-error').hidden=true;
-    const entry={time};if(status)entry.status=status;entry.note=note;if(by)entry.by=by;
+    const images=[];
+    for(const slot of $$('.img-slot').filter(s=>!s.hidden)){
+      const n=Number(slot.dataset.slot)+1,url=$('.img-url',slot).value.trim(),alt=$('.img-alt',slot).value.trim(),file=$('.img-file',slot).files?.length;
+      if(!url&&!alt&&!file)continue;
+      if(!url&&file)return fail('第 '+n+' 张：这是静态网站，浏览器不能把图片写进仓库。请把已打码的文件交给维护者，用 tools/board.py log … --image 文件 入库；或把图放到可公开访问的 https 地址后再粘贴链接。');
+      if(!url)return fail('第 '+n+' 张：填了说明，还要粘贴 https 图片链接。');
+      const ue=BoardCore.httpsUrlError(url);if(ue)return fail('第 '+n+' 张：'+ue+'（后台只能贴 https 链接）。');
+      const ae=BoardCore.imageAltError(alt);if(ae)return fail('第 '+n+' 张：'+ae+'。');
+      images.push({src:url,alt});
+    }
+    const entry={time};if(status)entry.status=status;entry.note=note;if(by)entry.by=by;if(images.length)entry.images=images;
     (t.progress_log=t.progress_log||[]).push(entry);
     if(status){t.status=status;$('#task-status').value=status;}
-    $('#log-note').value='';$('#log-status').value='';$('#log-time').value=bangkokMinute().replace(' ','T');
+    $('#log-note').value='';$('#log-status').value='';$('#log-time').value=bangkokMinute().replace(' ','T');resetImageSlots();
     renderLogEditor();validateTask();toast('已追加进度记录'+(status?'，任务状态改为「'+labelFor('statuses',status)+'」':'')+'。点「保存任务到草稿」后生效。');
+  }
+  // v8：配图槽。第 2 槽默认收起，第 1 张填了链接或选了文件后才出现「＋ 再加一张」。本地文件只做预览。
+  function slotPreview(slot){
+    const url=$('.img-url',slot).value.trim(),file=$('.img-file',slot).files?.[0],img=$('.img-slot-preview img',slot),label=$('.img-slot-preview span',slot);
+    if(slot._objectURL){URL.revokeObjectURL(slot._objectURL);slot._objectURL=null;}
+    let src='',text='无预览';
+    if(url&&!BoardCore.httpsUrlError(url)){src=url;text='';}
+    else if(url){text='链接不合格';}
+    else if(file){if(!/\.(jpe?g|png|webp)$/i.test(file.name)){text='只收 jpg/png/webp';}else{slot._objectURL=URL.createObjectURL(file);src=slot._objectURL;text='';}}
+    $('.img-local-note',slot).textContent=file?`已选 ${file.name}（${Math.round(file.size/1024)}KB）：只预览，不会入库`:'本地文件只预览，不会入库';
+    img.onerror=()=>{img.hidden=true;label.hidden=false;label.textContent='无法加载';};
+    if(src){img.referrerPolicy=/^https:/.test(src)?'no-referrer':'';img.src=src;img.hidden=false;label.hidden=true;}else{img.removeAttribute('src');img.hidden=true;label.hidden=false;label.textContent=text;}
+    syncImageSlots();
+  }
+  function syncImageSlots(){
+    const [first,second]=$$('.img-slot'),filled=!!($('.img-url',first).value.trim()||$('.img-file',first).files?.length);
+    $('#log-image-more').hidden=!filled||!second.hidden;
+  }
+  function resetImageSlots(){
+    $$('.img-slot').forEach(slot=>{$('.img-url',slot).value='';$('.img-alt',slot).value='';$('.img-file',slot).value='';slotPreview(slot);slot.hidden=slot.dataset.slot!=='0';});
+    syncImageSlots();
+  }
+  function removeLogImage(index,imageIndex){
+    const t=state.editingTask,e=t?.progress_log?.[index],g=e?.images?.[imageIndex];if(!g)return;
+    if(!confirm('去掉这张图片吗？\n'+g.alt+'\n只从这条记录里去掉；保存到草稿前可点「取消」放弃整次编辑。'))return;
+    e.images.splice(imageIndex,1);if(!e.images.length)delete e.images;
+    renderLogEditor();validateTask();
+  }
+  function supplementLogImage(index){
+    const t=state.editingTask,e=t?.progress_log?.[index];if(!e)return;
+    const box=$('.log-supplement'),url=$('.sup-url',box).value.trim(),alt=$('.sup-alt',box).value.trim(),err=$('.sup-error',box);
+    const fail=m=>{err.textContent=m;err.hidden=false;};
+    const ue=BoardCore.httpsUrlError(url);if(ue)return fail(ue+'（后台只能贴 https 链接）。');
+    const ae=BoardCore.imageAltError(alt);if(ae)return fail(ae+'。');
+    if((e.images||[]).length>=BoardCore.MAX_IMAGES)return fail('每条记录最多 '+BoardCore.MAX_IMAGES+' 张。');
+    (e.images=e.images||[]).push({src:url,alt});state.supplementIndex=null;
+    renderLogEditor();validateTask();toast('已补图。点「保存任务到草稿」后生效。');
   }
   function deleteLogEntry(index){
     const t=state.editingTask;if(!t||!t.progress_log||!t.progress_log[index])return;
@@ -154,7 +201,11 @@
   function exportBoard(){if(boardErrors(state.board).length)return;const blob=new Blob([JSON.stringify(state.board,null,2)+'\n'],{type:'application/json;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='board.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('已导出 board.json；替换站点数据文件后重新部署。')}
   async function importFile(file){if(!file)return;let text;try{text=await file.text();const data=JSON.parse(text),errors=boardErrors(data);if(errors.length){state.activeTab='advanced';$$('[data-admin-tab]').forEach(b=>b.classList.toggle('active',b.dataset.adminTab==='advanced'));for(const name of ['tasks','expenses','framework','advanced'])$('#tab-'+name).hidden=name!=='advanced';$('#json-editor').value=text;state.advancedDirty=true;validateJSON();toast('导入内容需要修正，已放入高级 JSON；当前草稿未替换。');return;}if(state.dirty&&!confirm('导入会替换当前本地草稿，继续？'))return;state.board=data;state.repairOnly=false;state.advancedDirty=false;markChanged();toast('已导入到本地草稿。');}catch(e){toast('导入失败：'+e.message)}}
   function bind(){
-    document.addEventListener('keydown',event=>{if(event.key==='Enter'&&event.target.matches('#log-time,#log-by,#log-status')){event.preventDefault();addLogEntry();}});
+    document.addEventListener('keydown',event=>{if(event.key==='Enter'&&event.target.matches('#log-time,#log-by,#log-status')){event.preventDefault();addLogEntry();}if(event.key==='Enter'&&event.target.matches('.sup-url,.sup-alt')){event.preventDefault();$('[data-action="log-image-supplement-ok"]')?.click();}if(event.key==='Enter'&&event.target.matches('.img-url,.img-alt')){event.preventDefault();}});
+    document.addEventListener('input',event=>{const slot=event.target.closest?.('.img-slot');if(slot){$('#log-error').hidden=true;if(event.target.matches('.img-url'))slotPreview(slot);}});
+    // 外链图加载失败：列表里换成写着说明的浅色占位框，不显示破图图标
+    document.addEventListener('error',event=>{const img=event.target;if(!img.matches?.('.log-item-images img'))return;const box=document.createElement('span');box.className='admin-thumb-fallback';box.textContent=img.alt||'图片';box.title='图片无法加载：'+(img.alt||'');img.replaceWith(box);},true);
+    document.addEventListener('change',event=>{const slot=event.target.closest?.('.img-slot');if(slot&&event.target.matches('.img-file'))slotPreview(slot);});
     document.addEventListener('click',event=>{
       const taskEdit=event.target.closest('[data-edit-task]');if(taskEdit){openTask(taskEdit.dataset.editTask);return;}
       const taskDelete=event.target.closest('[data-delete-task]');if(taskDelete){deleteTask(taskDelete.dataset.deleteTask);return;}
@@ -166,6 +217,12 @@
       if(action==='log-add')addLogEntry();
       if(action==='log-now')$('#log-time').value=bangkokMinute().replace(' ','T');
       if(action==='log-delete')deleteLogEntry(Number(button.dataset.logIndex));
+      if(action==='log-image-more'){const second=$('.img-slot[data-slot="1"]');second.hidden=false;syncImageSlots();$('.img-url',second).focus();}
+      if(action==='log-image-less'){const second=$('.img-slot[data-slot="1"]');$('.img-url',second).value='';$('.img-alt',second).value='';$('.img-file',second).value='';slotPreview(second);second.hidden=true;syncImageSlots();}
+      if(action==='log-image-remove')removeLogImage(Number(button.dataset.logIndex),Number(button.dataset.imageIndex));
+      if(action==='log-image-supplement'){state.supplementIndex=Number(button.dataset.logIndex);renderLogEditor();$('.log-supplement .sup-url')?.focus();}
+      if(action==='log-image-supplement-cancel'){state.supplementIndex=null;renderLogEditor();}
+      if(action==='log-image-supplement-ok')supplementLogImage(Number(button.dataset.logIndex));
       if(action==='close-task')$('#task-editor').close();
       if(action==='add-framework')openFramework();
       if(action==='close-framework')$('#framework-editor').close();

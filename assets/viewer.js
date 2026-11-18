@@ -378,12 +378,53 @@ function logEntries(t){return (t.progress_log||[]).map((e,i)=>({...e,i})).sort((
 // v7.1：只在记录年份不等于曼谷当年时显示年份
 function bangkokYear(){return new Date().toLocaleString('en-CA',{timeZone:'Asia/Bangkok',year:'numeric'}).slice(0,4)}
 function logTimeLabel(time){const md=time.slice(5).replace('-','/');return time.slice(0,4)===bangkokYear()?md:time.slice(0,4)+'/'+md}
+// v8：进度记录配图。缩略图在备注正下方；点开为轻量灯箱。仓库图片相对站点根目录，外链加 no-referrer。
+function progressImagesHtml(t,e){
+  const list=Array.isArray(e.images)?e.images.slice(0,2):[];if(!list.length)return '';
+  return `<div class="progress-images">${list.map((g,j)=>`<button type="button" class="progress-thumb" data-action="open-image" data-log-task="${esc(t.id)}" data-log-entry="${e.i}" data-log-image="${j}" aria-label="查看大图：${esc(g.alt)}"><img src="${esc(g.src)}" alt="${esc(g.alt)}" loading="lazy" decoding="async"${/^https:/.test(g.src)?' referrerpolicy="no-referrer"':''}></button>`).join('')}</div>`;
+}
+function thumbFallback(img){
+  const btn=img.closest('.progress-thumb');if(!btn||btn.classList.contains('is-broken'))return;
+  btn.classList.add('is-broken');btn.setAttribute('aria-label','图片无法加载：'+img.alt);
+  const box=document.createElement('span');box.className='thumb-fallback';box.innerHTML=`<span>${esc(img.alt)}</span><small>图片无法加载</small>`;img.replaceWith(box);
+}
+const LB_CHEVRON=d=>`<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="${d}" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const lightbox={images:[],index:0,opener:null};
+function ensureLightbox(){
+  let d=$('#lightbox');if(d)return d;
+  d=document.createElement('dialog');d.id='lightbox';d.className='lightbox';d.setAttribute('aria-label','查看图片');
+  d.innerHTML=`<div class="lb-top"><span class="lb-count" aria-live="polite"></span><button type="button" class="lb-close" data-lb="close" aria-label="关闭图片">${icon('close',20)}</button></div><button type="button" class="lb-nav lb-prev" data-lb="prev" aria-label="上一张">${LB_CHEVRON('M15 5l-7 7 7 7')}</button><figure class="lb-figure"><img class="lb-img" alt=""><div class="lb-fallback" hidden><span></span><small>图片无法加载</small></div><figcaption class="lb-caption"></figcaption></figure><button type="button" class="lb-nav lb-next" data-lb="next" aria-label="下一张">${LB_CHEVRON('M9 5l7 7-7 7')}</button>`;
+  document.body.appendChild(d);
+  const img=$('.lb-img',d);
+  img.addEventListener('error',()=>{img.hidden=true;const f=$('.lb-fallback',d);$('span',f).textContent=img.alt;f.hidden=false});
+  d.addEventListener('click',event=>{event.stopPropagation();const b=event.target.closest('[data-lb]');if(b){if(b.dataset.lb==='close')closeLightbox();else stepLightbox(b.dataset.lb==='next'?1:-1);return}if(!event.target.closest('.lb-img,.lb-fallback,.lb-caption'))closeLightbox()});
+  d.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();closeLightbox()}else if(event.key==='ArrowRight'||event.key==='ArrowLeft'){event.preventDefault();stepLightbox(event.key==='ArrowRight'?1:-1)}});
+  d.addEventListener('cancel',event=>{event.preventDefault();closeLightbox()});
+  return d;
+}
+function showLightboxImage(){
+  const d=ensureLightbox(),g=lightbox.images[lightbox.index],many=lightbox.images.length>1,img=$('.lb-img',d);
+  $('.lb-fallback',d).hidden=true;img.hidden=false;
+  if(/^https:/.test(g.src))img.referrerPolicy='no-referrer';else img.removeAttribute('referrerpolicy');
+  img.alt=g.alt;img.src=g.src;
+  $('.lb-caption',d).textContent=g.alt;
+  const count=$('.lb-count',d);count.textContent=many?`${lightbox.index+1} / ${lightbox.images.length}`:'';count.hidden=!many;
+  $$('.lb-nav',d).forEach(b=>{b.hidden=!many});
+  d.classList.toggle('is-single',!many);
+}
+function openLightbox(btn){
+  const t=byId.get(btn.dataset.logTask),e=t&&(t.progress_log||[])[Number(btn.dataset.logEntry)];if(!e||!Array.isArray(e.images))return;
+  lightbox.images=e.images.slice(0,2);lightbox.index=Math.min(Number(btn.dataset.logImage)||0,lightbox.images.length-1);lightbox.opener=btn;
+  const d=ensureLightbox();showLightboxImage();if(!d.open)d.showModal();$('.lb-close',d).focus({preventScroll:true});
+}
+function stepLightbox(step){if(lightbox.images.length<2)return;lightbox.index=(lightbox.index+step+lightbox.images.length)%lightbox.images.length;showLightboxImage()}
+function closeLightbox(){const d=$('#lightbox');if(d?.open)d.close();if(lightbox.opener?.isConnected)lightbox.opener.focus({preventScroll:true})}
 function progressHtml(t){
   const list=logEntries(t);if(!list.length)return '';
   return `<section class="detail-section progress-section" id="progress-log"><h3>${icon('clock',15)}进度记录<small>${list.length} 条 · 最新在上</small></h3><ol class="progress-timeline">${list.map((e,n)=>{
     const st=e.status&&statusMap.get(e.status);const base=st?st.color:'#9b8670';const tint=mixHex(base,'#ffffff',0.86);
     const who=e.by?(personMap.get(e.by)?.name||e.by):'';
-    return `<li class="progress-item ${n===0?'is-latest':''}" style="--dot:${base}"><div class="progress-meta"><time datetime="${esc(e.time.replace(' ','T'))}">${esc(logTimeLabel(e.time))}</time>${st?`<span class="progress-status" style="color:${readableOn(base,tint)};background:${tint};border-color:${base}55">${esc(statusName(e.status))}</span>`:''}${who?`<span class="progress-by">${esc(who)}</span>`:''}</div><p class="progress-note">${esc(e.note)}</p></li>`}).join('')}</ol></section>`;
+    return `<li class="progress-item ${n===0?'is-latest':''}" style="--dot:${base}"><div class="progress-meta"><time datetime="${esc(e.time.replace(' ','T'))}">${esc(logTimeLabel(e.time))}</time>${st?`<span class="progress-status" style="color:${readableOn(base,tint)};background:${tint};border-color:${base}55">${esc(statusName(e.status))}</span>`:''}${who?`<span class="progress-by">${esc(who)}</span>`:''}</div><p class="progress-note">${esc(e.note)}</p>${progressImagesHtml(t,e)}</li>`}).join('')}</ol></section>`;
 }
 function renderDetail(id){
   const t=byId.get(id),loc=PALETTE.locations[t.location];
@@ -394,6 +435,7 @@ function setLegend(open){$('#legend-pop').hidden=!open;$('#legend-toggle').setAt
 // 手机画布：把视图导航贴到筛选条件下方，画布占满剩余屏幕
 function alignCanvasMode(){if(!canvasMode())return;const nav=$('.view-nav'),sticky=$('#sticky-top');scrollTo({top:scrollY+nav.getBoundingClientRect().top-sticky.getBoundingClientRect().height,behavior:'instant'})}
 function bindEvents(){
+  document.addEventListener('error',event=>{if(event.target.matches?.('.progress-thumb img'))thumbFallback(event.target)},true);
   document.addEventListener('click',event=>{
     const evLine=event.target.closest('#nav-event-line');if(evLine){const open=!evLine.classList.contains('is-open');evLine.classList.toggle('is-open',open);evLine.setAttribute('aria-expanded',String(open));return}
     if(!$('#legend-pop').hidden&&!event.target.closest('#legend-wrap'))setLegend(false);
@@ -405,6 +447,7 @@ function bindEvents(){
     if(action==='toggle-filters'){if(state.view==='expenses'||deskMq.matches)return;state.filtersOpen=!state.filtersOpen;syncFilterPanel();if(state.filtersOpen)requestAnimationFrame(()=>{const panel=$('#filter-panel'),top=panel.getBoundingClientRect().top-$('#sticky-top').getBoundingClientRect().height-6;if(top<0||top>innerHeight*0.6)scrollTo({top:scrollY+top,behavior:'smooth'})});if(!state.filtersOpen&&state.mobile)requestAnimationFrame(()=>$('.view-nav').scrollIntoView({block:'start',behavior:'smooth'}));}
     if(action==='filter-pending'){state.filters.pending=state.filters.pending==='pending'?'':'pending';$('#filter-pending').value=state.filters.pending;render()}
     if(action==='filter-unassigned'){state.filters.assignee=state.filters.assignee==='unassigned'?'':'unassigned';$('#filter-assignee').value=state.filters.assignee;render()}
+    if(action==='open-image'){openLightbox(el);return}
     if(action==='close-dialog')$('#task-dialog').close();
     if(action==='clear-focus'){state.selectedId=null;relation=emptyRelations();updateHighlight();const dialog=$('#task-dialog');if(dialog.open&&!dialog.matches(':modal'))dialog.close()}
     if(action==='scroll-top')$('#canvas-scroll').scrollTo({left:0,top:0,behavior:'smooth'});
