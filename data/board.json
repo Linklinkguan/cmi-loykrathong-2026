@@ -2,7 +2,7 @@
   "version": 3,
   "meta": {
     "title": "2026 CMI 水灯节庆典筹备任务管理",
-    "updatedAt": "2026-11-18T09:44:27.992944+07:00",
+    "updatedAt": "2026-11-18T10:33:38.187024+07:00",
     "timeZone": "Asia/Bangkok",
     "heroTitle": "水灯节 · 筹备总览",
     "event": {
@@ -1283,14 +1283,14 @@
       "timeHint": "",
       "layer": "中",
       "location": "远程",
-      "status": "待决",
+      "status": "进行中",
       "executor": [
         "Link"
       ],
       "participants": [],
       "pre": [],
       "pendingNote": "确认对外使用的准备时长表述，以及T恤是否发放、数量和发放时间。",
-      "notes": "口径确定。"
+      "notes": "口径确定。2026-11-18 10:31 Link 开始处理，与 T73 小红书待定项中的篝火时间与 T 恤一并拍板。"
     },
     {
       "id": "T39",
@@ -2058,6 +2058,136 @@
       "pre": [],
       "pendingNote": "",
       "notes": "交清本月网费，现场联网测试通过。"
+    },
+    {
+      "id": "T71",
+      "title": "发布任务管理网站 v6.1",
+      "description": "按 Link 10:18 同意，把任务管理网站 v6.1（提高信息密度、桌面三栏可收起、全屏、手机画布、紧凑卡片，费用写明水灯材料费+场地费、餐费AA）发布到线上。",
+      "category": "管理",
+      "threads": [
+        "码·社媒"
+      ],
+      "date": "2026-11-18",
+      "timeHint": "上",
+      "layer": "软",
+      "location": "远程",
+      "status": "已完成",
+      "executor": [
+        "Link"
+      ],
+      "participants": [],
+      "pre": [],
+      "pendingNote": "",
+      "notes": "2026-11-18 10:19 上线，commit 1cb2782；桌面 1440×900 与手机 390×844 线上核对通过。"
+    },
+    {
+      "id": "T72",
+      "title": "定任务网站手机顶部高度与页头显示",
+      "description": "决定两项：手机顶部是否再压到约 150px（美术总监建议把单栏/画布和按执行人并进图例、搜索行，进度数据条保留）；手机和平板页头是否加回「约35人」和「20:00后自愿参加篝火」。",
+      "category": "管理",
+      "threads": [
+        "码·社媒"
+      ],
+      "date": "2026-11-18",
+      "timeHint": "",
+      "layer": "软",
+      "location": "远程",
+      "status": "进行中",
+      "executor": [
+        "Link"
+      ],
+      "participants": [],
+      "pre": [
+        "T71"
+      ],
+      "pendingNote": "",
+      "notes": "2026-11-18 10:31 Link 开始处理（Elon 10:16 两小时清单第 1 段）。"
+    },
+    {
+      "id": "T73",
+      "title": "拍板小红书待定项",
+      "description": "拍板六项：标题、报名顺序、人脸照片、评论区内容、篝火时间与 T 恤、第 6 张图是否付费重新生成。",
+      "category": "社区展示",
+      "threads": [
+        "码·社媒"
+      ],
+      "date": "2026-11-18",
+      "timeHint": "",
+      "layer": "中",
+      "location": "远程",
+      "status": "进行中",
+      "executor": [
+        "Link"
+      ],
+      "participants": [],
+      "pre": [],
+      "pendingNote": "",
+      "notes": "2026-11-18 10:31 Link 开始处理（Elon 10:16 两小时清单第 2 段）。篝火时间与 T 恤口径同 T38。"
+    },
+    {
+      "id": "T74",
+      "title": "发布小红书活动笔记",
+      "description": "按 T73 拍板结果发布水灯节小红书笔记。",
+      "category": "社区展示",
+      "threads": [
+        "码·社媒"
+      ],
+      "date": "2026-11-18",
+      "timeHint": "",
+      "layer": "中",
+      "location": "远程",
+      "status": "进行中",
+      "executor": [
+        "Link"
+      ],
+      "participants": [],
+      "pre": [
+        "T73"
+      ],
+      "pendingNote": "",
+      "notes": "2026-11-18 10:31 Link 开始处理（Elon 10:16 两小时清单第 3 段）。发布链接待补充。"
+    },
+    {
+      "id": "T75",
+      "title": "确认 11-19 采购单",
+      "description": "清点社区已有物品、核对采购数量，定剪刀几把、谁去采购、几点出发，作为 11-19 跑路线 A/B/C 的依据。",
+      "category": "采买",
+      "threads": [
+        "钱·总账"
+      ],
+      "date": "2026-11-18",
+      "timeHint": "",
+      "layer": "中",
+      "location": "远程",
+      "status": "进行中",
+      "executor": [
+        "Link"
+      ],
+      "participants": [],
+      "pre": [],
+      "pendingNote": "",
+      "notes": "2026-11-18 10:31 Link 开始处理（Elon 10:16 两小时清单第 4 段）。剪刀数量、采购人、出发时间待补充。"
+    },
+    {
+      "id": "T76",
+      "title": "定搁置的设计决定",
+      "description": "决定五项：印刷物印什么、印几份；易拉宝重做方向；T70 交给谁做、花多少钱；海报 v5；悬念游戏怎么放进流程。",
+      "category": "视觉",
+      "threads": [
+        "物·展墙"
+      ],
+      "date": "2026-11-18",
+      "timeHint": "",
+      "layer": "中",
+      "location": "远程",
+      "status": "进行中",
+      "executor": [
+        "Link"
+      ],
+      "participants": [],
+      "pre": [],
+      "pendingNote": "",
+      "notes": "2026-11-18 10:31 Link 开始处理（Elon 10:16 两小时清单第 5 段）。结果分别影响 T13、T30、T70。"
     }
   ]
 }
