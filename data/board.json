@@ -2,7 +2,7 @@
   "version": 3,
   "meta": {
     "title": "2026 CMI 水灯节庆典筹备任务管理",
-    "updatedAt": "2026-11-18T10:51:16.884274+07:00",
+    "updatedAt": "2026-11-18T10:55:07.116331+07:00",
     "timeZone": "Asia/Bangkok",
     "heroTitle": "水灯节 · 筹备总览",
     "event": {
@@ -14,7 +14,8 @@
       "endTime": "21:00",
       "bonfire": "20:00后自愿参加篝火",
       "attendees": "约35人",
-      "fee": "每人200泰铢（水灯材料费+场地费）；餐费按实际花销AA"
+      "fee": "每人200泰铢（水灯材料费+场地费）；餐费按实际花销AA",
+      "mapUrl": "https://maps.app.goo.gl/AVbLwL3oimAcpGYF6"
     },
     "logos": {
       "icon": {
@@ -2206,6 +2207,11 @@
           "status": "进行中",
           "note": "开始处理；发布链接待补充。",
           "by": "Link"
+        },
+        {
+          "time": "2026-11-18 10:54",
+          "note": "Link 正在发布小红书笔记；紫姀同步发小红书并转发公众号长文（见 T77）",
+          "by": "Link"
         }
       ]
     },
@@ -2270,7 +2276,7 @@
     {
       "id": "T77",
       "title": "传播活动推文并点对点邀请参与人",
-      "description": "转发活动宣传推文，并一对一邀请参与人。",
+      "description": "转发活动宣传推文，并一对一邀请参与人；范围包括发小红书笔记、转发公众号长文。",
       "category": "社区展示",
       "threads": [
         "码·社媒"
@@ -2284,7 +2290,9 @@
         "紫姀"
       ],
       "participants": [],
-      "pre": [],
+      "pre": [
+        "T74"
+      ],
       "pendingNote": "",
       "notes": "紫姀是社区创始人、核心共建者，目前和 Link 协作。",
       "progress_log": [
@@ -2292,6 +2300,39 @@
           "time": "2026-11-18 10:50",
           "status": "进行中",
           "note": "新增：补记紫姀正在做的推文转发和点对点邀请，作为进行中工作的备份记录",
+          "by": "Link"
+        },
+        {
+          "time": "2026-11-18 10:54",
+          "note": "紫姀负责发小红书笔记，并转发公众号长文",
+          "by": "Link"
+        }
+      ]
+    },
+    {
+      "id": "T78",
+      "title": "编辑短图文并链接长文",
+      "description": "长文发布后，Link 用之前发过的图片包编辑一篇短图文，文末直接链接到长文，带号召行动。",
+      "category": "社区展示",
+      "threads": [
+        "码·社媒"
+      ],
+      "date": "2026-11-18",
+      "timeHint": "",
+      "layer": "中",
+      "location": "远程",
+      "status": "未开始",
+      "executor": [
+        "Link"
+      ],
+      "participants": [],
+      "pre": [],
+      "pendingNote": "长文发布状态待补充",
+      "notes": "",
+      "progress_log": [
+        {
+          "time": "2026-11-18 10:54",
+          "note": "Link 定下计划",
           "by": "Link"
         }
       ]
