@@ -2,7 +2,7 @@
   "version": 3,
   "meta": {
     "title": "2026 CMI 水灯节庆典筹备任务管理",
-    "updatedAt": "2026-11-18T12:12:18.816872+07:00",
+    "updatedAt": "2026-11-18T12:22:50.853811+07:00",
     "timeZone": "Asia/Bangkok",
     "heroTitle": "水灯节 · 筹备总览",
     "event": {
@@ -1530,7 +1530,7 @@
       "timeHint": "中午",
       "layer": "硬",
       "location": "现场",
-      "status": "未开始",
+      "status": "进行中",
       "executor": [],
       "participants": [
         "核心组",
@@ -1538,7 +1538,15 @@
       ],
       "pre": [],
       "pendingNote": "",
-      "notes": "与房东对接放水后，确认池塘水位和码头到水面的高度可安全放灯；22日早上复查。"
+      "notes": "与房东对接放水后，确认池塘水位和码头到水面的高度可安全放灯；22日早上复查。",
+      "progress_log": [
+        {
+          "time": "2026-11-18 12:22",
+          "status": "进行中",
+          "note": "已请房东开闸，池塘水位正在上涨，Link 确认进行中。",
+          "by": "Link"
+        }
+      ]
     },
     {
       "id": "T47",
