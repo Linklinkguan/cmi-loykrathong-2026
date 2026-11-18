@@ -2,7 +2,7 @@
   "version": 3,
   "meta": {
     "title": "2026 CMI 水灯节庆典筹备任务管理",
-    "updatedAt": "2026-11-18T10:55:07.116331+07:00",
+    "updatedAt": "2026-11-18T11:06:55.580649+07:00",
     "timeZone": "Asia/Bangkok",
     "heroTitle": "水灯节 · 筹备总览",
     "event": {
@@ -459,7 +459,7 @@
       "timeHint": "",
       "layer": "硬",
       "location": "远程",
-      "status": "进行中",
+      "status": "已完成",
       "executor": [
         "Link",
         "Elon"
@@ -467,7 +467,15 @@
       "participants": [],
       "pre": [],
       "pendingNote": "",
-      "notes": "草稿经Link 林可确认后发送。"
+      "notes": "草稿经Link 林可确认后发送。",
+      "progress_log": [
+        {
+          "time": "2026-11-18 11:06",
+          "status": "已完成",
+          "note": "Link 已在水灯节报名群发出群公告，内容包括活动信息、报名表链接、场地地图和群内参与说明",
+          "by": "Link"
+        }
+      ]
     },
     {
       "id": "T04",
