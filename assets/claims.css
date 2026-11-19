@@ -33,3 +33,7 @@
 .claim-warning[hidden]{display:none}
 #claim-form .has-privacy-warning{border-color:var(--claim-pending);outline:1px solid var(--claim-pending)}
 #claim-form .claim-warning{margin-bottom:12px}
+
+/* 运维卡：执行人下方的小字提示（无底色、无边框、非按钮） */
+.no-claim-note{display:flex;align-items:center;gap:4px;margin:6px 0 0;color:#8A8279;font-size:12px;line-height:1.4;font-weight:400;white-space:nowrap}
+.no-claim-note svg{flex:none;stroke-width:1.3}

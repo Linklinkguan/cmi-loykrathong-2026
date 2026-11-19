@@ -253,6 +253,11 @@
               "type": "boolean",
               "description": "已有执行人的任务是否仍显示认领按钮；缺省 true"
             },
+            "noClaimCategories": {
+              "type": "array",
+              "items": {"type": "string"},
+              "description": "这些任务范畴（category id）的卡不显示认领按钮；缺省为空"
+            },
             "limits": {
               "type": "object",
               "properties": {
