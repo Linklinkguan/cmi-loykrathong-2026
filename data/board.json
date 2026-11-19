@@ -2,7 +2,7 @@
   "version": 3,
   "meta": {
     "title": "2026 CMI 水灯节庆典筹备任务管理",
-    "updatedAt": "2026-11-18T22:30:23.414730+07:00",
+    "updatedAt": "2026-11-19T07:11:57.591745+07:00",
     "timeZone": "Asia/Bangkok",
     "heroTitle": "水灯节 · 筹备总览",
     "event": {
@@ -2619,7 +2619,7 @@
       "description": "把看板开发过程做成可回放文件。素材在攒。",
       "category": "任务运维＋统筹策划",
       "threads": [],
-      "date": "2026-11-18",
+      "date": "2026-11-23",
       "timeHint": "待补充",
       "layer": "中",
       "location": "远程",
@@ -2628,7 +2628,7 @@
       "participants": [],
       "pre": [],
       "pendingNote": "",
-      "notes": "日期待补充（日期为必填字段，暂填建卡日 11-18）",
+      "notes": "日期 11-23 为暂定，待 Link 确认（日期为必填字段）",
       "progress_log": [
         {
           "time": "2026-11-18 22:27",
@@ -2643,7 +2643,7 @@
       "description": "用真手机在微信里长按识别认领卡二维码，测一次。等 Link 测。",
       "category": "任务运维＋统筹策划",
       "threads": [],
-      "date": "2026-11-18",
+      "date": "2026-11-23",
       "timeHint": "待补充",
       "layer": "中",
       "location": "远程",
@@ -2654,7 +2654,7 @@
       "participants": [],
       "pre": [],
       "pendingNote": "",
-      "notes": "日期待补充（日期为必填字段，暂填建卡日 11-18）",
+      "notes": "日期 11-23 为暂定，待 Link 确认（日期为必填字段）",
       "progress_log": [
         {
           "time": "2026-11-18 22:27",
@@ -2669,7 +2669,7 @@
       "description": "关系结构视图改标题。Yuki 建议「主要事项」，Link 还没定。",
       "category": "任务运维＋统筹策划",
       "threads": [],
-      "date": "2026-11-18",
+      "date": "2026-11-23",
       "timeHint": "待补充",
       "layer": "中",
       "location": "远程",
@@ -2678,7 +2678,7 @@
       "participants": [],
       "pre": [],
       "pendingNote": "Yuki 建议「主要事项」，Link 还没定",
-      "notes": "日期待补充（日期为必填字段，暂填建卡日 11-18）",
+      "notes": "日期 11-23 为暂定，待 Link 确认（日期为必填字段）",
       "progress_log": [
         {
           "time": "2026-11-18 22:27",
@@ -2693,7 +2693,7 @@
       "description": "持续追加看板开发与使用过程日志。具体内容待补充。",
       "category": "任务运维＋统筹策划",
       "threads": [],
-      "date": "2026-11-18",
+      "date": "2026-11-23",
       "timeHint": "待补充",
       "layer": "中",
       "location": "远程",
@@ -2702,11 +2702,16 @@
       "participants": [],
       "pre": [],
       "pendingNote": "",
-      "notes": "日期待补充（日期为必填字段，暂填建卡日 11-18）",
+      "notes": "日期 11-23 为暂定，待 Link 确认（日期为必填字段）",
       "progress_log": [
         {
           "time": "2026-11-18 22:27",
           "note": "Link 定：新建，归入任务运维＋统筹策划",
+          "by": "Link"
+        },
+        {
+          "time": "2026-11-19 07:11",
+          "note": "11-19 07:11 Link 定：运维卡日期改为 11-23；运维卡不显示认领按钮（预览待审）",
           "by": "Link"
         }
       ]
@@ -2717,7 +2722,7 @@
       "description": "按 Link 的口述和聊天截图整理产品反思与笔记。由 Elon 写日志。",
       "category": "任务运维＋统筹策划",
       "threads": [],
-      "date": "2026-11-18",
+      "date": "2026-11-23",
       "timeHint": "待补充",
       "layer": "中",
       "location": "远程",
@@ -2728,7 +2733,7 @@
       "participants": [],
       "pre": [],
       "pendingNote": "",
-      "notes": "日期待补充（日期为必填字段，暂填建卡日 11-18）",
+      "notes": "日期 11-23 为暂定，待 Link 确认（日期为必填字段）",
       "progress_log": [
         {
           "time": "2026-11-18 22:27",
