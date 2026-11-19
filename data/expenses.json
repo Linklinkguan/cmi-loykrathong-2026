@@ -2,7 +2,7 @@
   "version": 1,
   "meta": {
     "title": "费用与支出",
-    "updatedAt": "2026-11-18T22:13:29.323324+07:00",
+    "updatedAt": "2026-11-19T19:28:57.811927+07:00",
     "timeZone": "Asia/Bangkok",
     "currency": "THB",
     "import": {
@@ -1521,15 +1521,15 @@
       "unit": "瓶",
       "budgetUnitPrice": "待报价",
       "budgetSubtotal": "",
-      "actual": "",
-      "payer": "",
-      "place": "Makro/Big C/Lotus",
+      "actual": 952,
+      "payer": "Link",
+      "place": "Bixby",
       "date": "2026-11-19",
-      "status": "未购",
+      "status": "已购",
       "source": "Link原话",
-      "notes": "Link说「一批」，数量6瓶为建议，待Link定；放签到台、长桌、火盆区",
+      "notes": "Link说「一批」，数量6瓶为建议，待Link定；放签到台、长桌、火盆区；Link 11-19 19:27 报：Bixby 合计 952 THB，含驱蚊喷雾、驱蚊膏、防扭伤膏药；分项金额与数量未报；付款方式：待补充；驱蚊用品已买齐",
       "taskIds": [],
-      "updatedAt": "2026-11-18T04:32:20.306683+07:00",
+      "updatedAt": "2026-11-19T19:28:57.715571+07:00",
       "sourceRow": {
         "编号": "P038",
         "类目": "日用与安全",
@@ -3967,6 +3967,25 @@
       "source": "Link 11-18 20:17 口述，经 Elon 转达",
       "notes": "约 20:15（曼谷时间）；付款方式：现金；合计 340 泰铢，无分项金额，不拆分；花环花名不明，可能是茉莉，未确认；21:34 Link 定：已涵盖 P021 小蜡烛、P015 钉子；P009 茉莉花环少买，数量待定；类别按现有最接近的「水灯材料-装饰」记；凭证照片待入库；参与：林可、紫姀、雪雪、一兀",
       "updatedAt": "2026-11-18T22:13:29.323324+07:00"
+    },
+    {
+      "id": "P086",
+      "item": "防扭伤膏药",
+      "purpose": "防扭伤（活动当天备用）",
+      "category": "日用与安全",
+      "taskIds": [],
+      "quantity": "",
+      "unit": "",
+      "budgetUnitPrice": "",
+      "budgetSubtotal": "",
+      "actual": "",
+      "payer": "Link",
+      "place": "Bixby",
+      "date": "2026-11-19",
+      "status": "已购",
+      "source": "Link 11-19 19:27 口述，经 Elon 转达",
+      "notes": "金额含在 P038 合计 952 内，不重复计入；Link 11-19 19:27 报；数量未报；付款方式：待补充",
+      "updatedAt": "2026-11-19T19:28:57.811927+07:00"
     }
   ]
 }
