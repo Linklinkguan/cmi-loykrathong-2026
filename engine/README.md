@@ -5,9 +5,13 @@
 - `index.html`、`assets/engine.css`、`assets/engine.js`：页面及交互。
 - `data/engine.json`：数据；`设计_v1.md`：设计说明。
 - `tools/validate.py`：数据校验；`tools/build_standalone.py`：生成离线单文件；`tools/smoke.py`：浏览器冒烟测试。
-- `dist/engine_standalone.html`：构建后的离线版；`shots/v1/`：测试截图。
+- `dist/engine_standalone.html`：构建后的离线版；`shots/v1.2/`：测试截图。
 
 在本目录运行 `python3 -m http.server`，浏览器打开 `http://localhost:8000/`。离线版可直接打开。
+
+## v1.2 界面小修
+
+桌面图压缩至首屏，外围节点按类型分段、区分形状并支持悬停、聚焦和全部标签；手机五环导航、折叠控件与说明文字同步调整。数据保持不变。
 
 ## 新增经验并修订节点
 
@@ -58,3 +62,7 @@ python3 tools/smoke.py
 线上路径：https://linklinkguan.github.io/cmi-loykrathong-2026/engine/
 
 发布时先在部署仓库 `/workspace/lk-board-deploy/` 执行 `git fetch && git pull --rebase`，然后将本目录的 `index.html`、`assets/`、`data/`、`README.md` 复制到部署仓库的 `engine/`。仅执行 `git add engine/`，提交后正常推送，不强推。不要使用 `tools/deploy.sh`，它会跳过 engine。
+
+## v1.3 页面小修
+
+手机五环导航放大环名和序号，长环名分行并扩大点击区域；桌面放大标签、调整环 5 提示和节点间距，并为首屏图框留出底部余量。运行上述三项命令可校验数据、重建独立版并生成 `shots/v1.3/` 截图。
