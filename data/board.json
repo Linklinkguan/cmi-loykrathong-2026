@@ -2,7 +2,7 @@
   "version": 3,
   "meta": {
     "title": "2026 CMI 水灯节庆典筹备任务管理",
-    "updatedAt": "2026-11-20T15:49:19.267877+07:00",
+    "updatedAt": "2026-11-20T15:56:36.256207+07:00",
     "timeZone": "Asia/Bangkok",
     "heroTitle": "水灯节 · 筹备总览",
     "event": {
@@ -61,6 +61,12 @@
       "id": "紫姀",
       "name": "紫姀",
       "color": "#9C79A9",
+      "aliases": []
+    },
+    {
+      "id": "Adam",
+      "name": "Adam",
+      "color": "#8A765D",
       "aliases": []
     }
   ],
@@ -3060,6 +3066,29 @@
           "by": "Link"
         }
       ]
+    },
+    {
+      "id": "T100",
+      "title": "现场音乐 DJ／背景音乐播放（Live DJ & background music）",
+      "description": "1. Adam 自己选曲，会准备 DJ set；如果来不及准备 DJ set，就放他自己的旧歌单。目标是配合现场氛围，让参加的人更享受。他提过想放非洲音乐和地中海音乐。\n2. 群里有人点歌，Adam 自行决定放不放：晓芮想听 Latino／bachata，小欣姐想听 Lisa 的〈Sawadika〉。Link 已回复「Up to you」。\n3. 音响分工（Link 在群里说明的）：大音箱接 Link 的电脑，当室内主麦克风和室内背景音乐用；小蓝牙音箱可能放厨房，单独放音乐；户外音箱放背景音乐，也当户外麦克风用。\n4. 待补充：DJ 具体时段，以及要给致辞、环节留出静音的时间点；Adam 用自己的设备还是接 Link 的电脑或大音箱；到场和试音时间。\n5. 来源：Link 2026-11-20 15:54 指示，依据 11-20 报名群截图，经 Elon 转达。",
+      "category": "现场",
+      "threads": [
+        "声·音视频"
+      ],
+      "date": "2026-11-22",
+      "timeHint": "14:00–21:00",
+      "layer": "中",
+      "location": "现场",
+      "status": "未开始",
+      "executor": [
+        "Adam"
+      ],
+      "participants": [],
+      "pre": [
+        "T49"
+      ],
+      "pendingNote": "",
+      "notes": "活动时段 14:00–21:00；DJ 具体时段、静音时间点、设备接法、到场和试音时间待补充。"
     }
   ],
   "claims": []
