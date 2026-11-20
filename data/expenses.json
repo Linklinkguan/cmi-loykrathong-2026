@@ -2,7 +2,7 @@
   "version": 1,
   "meta": {
     "title": "费用与支出",
-    "updatedAt": "2026-11-20T16:16:33.649523+07:00",
+    "updatedAt": "2026-11-20T17:27:30.771247+07:00",
     "timeZone": "Asia/Bangkok",
     "currency": "THB",
     "import": {
@@ -4067,6 +4067,25 @@
       "source": "Link 11-20 口述+Makro 收据 14:56",
       "notes": "社区采购｜水灯节相关（待确认）；【不计入水灯节活动账】社区账本记录；含税 155 铢，现金，Link 付；金额故意不填「实际」；待 Link 确认",
       "updatedAt": "2026-11-20T15:01:24.732824+07:00"
+    },
+    {
+      "id": "P091",
+      "item": "汽车加油（筹备采购外出）",
+      "purpose": "筹备采购外出用车加油",
+      "category": "采购",
+      "taskIds": [],
+      "quantity": "1",
+      "unit": "次",
+      "budgetUnitPrice": "",
+      "budgetSubtotal": "",
+      "actual": 2400,
+      "payer": "Link",
+      "place": "待补充",
+      "date": "2026-11-20",
+      "status": "已购",
+      "source": "Link 2026-11-20 17:25、17:26 口述，经 Elon 转达；票据号：无",
+      "notes": "Link 确认算进水灯节社区支出；经手人 Link；来源 Link 2026-11-20 17:25、17:26 口述，经 Elon 转达。",
+      "updatedAt": "2026-11-20T17:27:30.771247+07:00"
     }
   ]
 }
