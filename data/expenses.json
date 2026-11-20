@@ -2,7 +2,7 @@
   "version": 1,
   "meta": {
     "title": "费用与支出",
-    "updatedAt": "2026-11-20T17:32:03.943750+07:00",
+    "updatedAt": "2026-11-20T18:08:24.794396+07:00",
     "timeZone": "Asia/Bangkok",
     "currency": "THB",
     "import": {
@@ -4091,6 +4091,25 @@
       "source": "Link 2026-11-20 17:25、17:26 口述，经 Elon 转达；票据号：无",
       "notes": "Link 确认算进水灯节社区支出；经手人 Link；来源 Link 2026-11-20 17:25、17:26 口述，经 Elon 转达。",
       "updatedAt": "2026-11-20T17:31:48.372565+07:00"
+    },
+    {
+      "id": "P092",
+      "item": "Plaswood 发泡板 6mm 整板（立牌／告示牌）",
+      "purpose": "做门口收款码立牌和现场告示牌",
+      "category": "印刷",
+      "taskIds": [],
+      "quantity": "1",
+      "unit": "块",
+      "budgetUnitPrice": "",
+      "budgetSubtotal": "",
+      "actual": 395,
+      "payer": "Link",
+      "place": "待补充",
+      "date": "2026-11-20",
+      "status": "已购",
+      "source": "Link 2026-11-20 18:07 口述，经 Elon 转达；票据号：无",
+      "notes": "PVC 发泡板，6 毫米厚，122×244 厘米，用来做门口收款码立牌和现场告示牌；可能对应 T31；来源 Link 2026-11-20 18:07 口述，经 Elon 转达。",
+      "updatedAt": "2026-11-20T18:08:24.794396+07:00"
     }
   ]
 }
