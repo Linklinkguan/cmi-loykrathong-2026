@@ -2,7 +2,7 @@
   "version": 3,
   "meta": {
     "title": "2026 CMI 水灯节庆典筹备任务管理",
-    "updatedAt": "2026-11-19T07:23:58.629512+07:00",
+    "updatedAt": "2026-11-20T15:27:50.217798+07:00",
     "timeZone": "Asia/Bangkok",
     "heroTitle": "水灯节 · 筹备总览",
     "event": {
@@ -2749,6 +2749,296 @@
           "by": "Link"
         }
       ]
+    },
+    {
+      "id": "T87",
+      "title": "灵感卡网站：开场画面、水灯漂流动画与背景音乐",
+      "description": "水灯灵感卡网站（2026CMI水灯庆典 · 水灯灵感卡，计划地址 https://linklinkguan.github.io/cmi-loykrathong-cards/ ，仓库 Linklinkguan/cmi-loykrathong-cards）开场：「祝大家水灯节快乐」艺术画面，底部循环播放水灯漂流 SVG 动画，配兰纳节庆背景音乐，可静音。来源：Link 2026-11-20 15:22 口述，经 Elon 转达。日期为暂定，待 Link 确认。",
+      "category": "视觉",
+      "threads": [
+        "物·灵感卡"
+      ],
+      "date": "2026-11-20",
+      "timeHint": "",
+      "layer": "中",
+      "location": "远程",
+      "status": "进行中",
+      "executor": [
+        "Elon"
+      ],
+      "participants": [],
+      "pre": [],
+      "pendingNote": "",
+      "notes": "日期为暂定，待 Link 确认。"
+    },
+    {
+      "id": "T88",
+      "title": "灵感卡网站：中英泰三语界面与网页合成卡面",
+      "description": "水灯灵感卡网站（2026CMI水灯庆典 · 水灯灵感卡，计划地址 https://linklinkguan.github.io/cmi-loykrathong-cards/ ，仓库 Linklinkguan/cmi-loykrathong-cards）：中英泰三语界面和卡面，卡面由网页合成，不用整图。来源：Link 2026-11-20 15:22 口述，经 Elon 转达。日期为暂定，待 Link 确认。",
+      "category": "视觉",
+      "threads": [
+        "物·灵感卡"
+      ],
+      "date": "2026-11-20",
+      "timeHint": "",
+      "layer": "中",
+      "location": "远程",
+      "status": "进行中",
+      "executor": [
+        "Elon"
+      ],
+      "participants": [],
+      "pre": [],
+      "pendingNote": "",
+      "notes": "日期为暂定，待 Link 确认。"
+    },
+    {
+      "id": "T89",
+      "title": "灵感卡网站：抽卡",
+      "description": "水灯灵感卡网站（2026CMI水灯庆典 · 水灯灵感卡，计划地址 https://linklinkguan.github.io/cmi-loykrathong-cards/ ，仓库 Linklinkguan/cmi-loykrathong-cards）抽卡：可抽三类组合或单类；卡从卡堆抽出、跳到桌面、依次翻开；加权概率，防脱库；结果存本地。来源：Link 2026-11-20 15:22 口述，经 Elon 转达。日期为暂定，待 Link 确认。",
+      "category": "视觉",
+      "threads": [
+        "物·灵感卡"
+      ],
+      "date": "2026-11-20",
+      "timeHint": "",
+      "layer": "中",
+      "location": "远程",
+      "status": "进行中",
+      "executor": [
+        "Elon"
+      ],
+      "participants": [],
+      "pre": [],
+      "pendingNote": "",
+      "notes": "日期为暂定，待 Link 确认。"
+    },
+    {
+      "id": "T90",
+      "title": "灵感卡网站：做水灯 2D 侧视拼贴",
+      "description": "水灯灵感卡网站（2026CMI水灯庆典 · 水灯灵感卡，计划地址 https://linklinkguan.github.io/cmi-loykrathong-cards/ ，仓库 Linklinkguan/cmi-loykrathong-cards）做水灯（2D 侧视拼贴）：香蕉杆底座、香蕉叶卷与折、蜡烛、佛像、星星纸、绸缎玫瑰、大头针等仿真件，加潮流创意贴纸库，共一两百种素材，可换色，桌面端画面干净。来源：Link 2026-11-20 15:22 口述，经 Elon 转达。日期为暂定，待 Link 确认。",
+      "category": "视觉",
+      "threads": [
+        "物·灵感卡"
+      ],
+      "date": "2026-11-20",
+      "timeHint": "",
+      "layer": "中",
+      "location": "远程",
+      "status": "进行中",
+      "executor": [
+        "Elon"
+      ],
+      "participants": [],
+      "pre": [],
+      "pendingNote": "",
+      "notes": "日期为暂定，待 Link 确认。"
+    },
+    {
+      "id": "T91",
+      "title": "灵感卡网站：水灯文化页",
+      "description": "水灯灵感卡网站（2026CMI水灯庆典 · 水灯灵感卡，计划地址 https://linklinkguan.github.io/cmi-loykrathong-cards/ ，仓库 Linklinkguan/cmi-loykrathong-cards）文化页：起源、清迈水灯、用途、仪式、日期、主办方，链接 CMI 官网和推文；之后挂中英文推文 HTML（Link 会提供，见 T93、T94）。来源：Link 2026-11-20 15:22 口述，经 Elon 转达。日期为暂定，待 Link 确认。",
+      "category": "视觉",
+      "threads": [
+        "物·灵感卡"
+      ],
+      "date": "2026-11-20",
+      "timeHint": "",
+      "layer": "中",
+      "location": "远程",
+      "status": "进行中",
+      "executor": [
+        "Elon"
+      ],
+      "participants": [],
+      "pre": [],
+      "pendingNote": "",
+      "notes": "日期为暂定，待 Link 确认。"
+    },
+    {
+      "id": "T92",
+      "title": "灵感卡网站：生成图带二维码、版权来源与联系方式",
+      "description": "水灯灵感卡网站（2026CMI水灯庆典 · 水灯灵感卡，计划地址 https://linklinkguan.github.io/cmi-loykrathong-cards/ ，仓库 Linklinkguan/cmi-loykrathong-cards）：网站生成的图片都带网站二维码；代码里写公开版权和来源（CMI Community，林可制作）；联系方式只放 X @linklinkguan，不放邮箱。来源：Link 2026-11-20 15:22 口述，经 Elon 转达。日期为暂定，待 Link 确认。",
+      "category": "视觉",
+      "threads": [
+        "物·灵感卡"
+      ],
+      "date": "2026-11-20",
+      "timeHint": "",
+      "layer": "中",
+      "location": "远程",
+      "status": "进行中",
+      "executor": [
+        "Elon"
+      ],
+      "participants": [],
+      "pre": [],
+      "pendingNote": "",
+      "notes": "日期为暂定，待 Link 确认。"
+    },
+    {
+      "id": "T93",
+      "title": "提供灵感卡网站用的推文中英 HTML",
+      "description": "Link 提供中英文推文 HTML，供灵感卡网站文化页挂载（见 T94）。来源：Link 2026-11-20 15:22 口述，经 Elon 转达。日期为暂定，待 Link 确认。",
+      "category": "视觉",
+      "threads": [
+        "物·灵感卡"
+      ],
+      "date": "2026-11-20",
+      "timeHint": "",
+      "layer": "中",
+      "location": "远程",
+      "status": "未开始",
+      "executor": [
+        "Link"
+      ],
+      "participants": [],
+      "pre": [],
+      "pendingNote": "",
+      "notes": "日期为暂定，待 Link 确认。"
+    },
+    {
+      "id": "T94",
+      "title": "灵感卡网站：挂中英文推文 HTML",
+      "description": "把 Link 提供的中英文推文 HTML 挂到水灯灵感卡网站（2026CMI水灯庆典 · 水灯灵感卡，计划地址 https://linklinkguan.github.io/cmi-loykrathong-cards/ ，仓库 Linklinkguan/cmi-loykrathong-cards）的水灯文化页。来源：Link 2026-11-20 15:22 口述，经 Elon 转达。日期为暂定，待 Link 确认。",
+      "category": "视觉",
+      "threads": [
+        "物·灵感卡"
+      ],
+      "date": "2026-11-21",
+      "timeHint": "上",
+      "layer": "中",
+      "location": "远程",
+      "status": "未开始",
+      "executor": [
+        "Elon"
+      ],
+      "participants": [],
+      "pre": [
+        "T91",
+        "T93"
+      ],
+      "pendingNote": "",
+      "notes": "日期为暂定，待 Link 确认。"
+    },
+    {
+      "id": "T95",
+      "title": "泰文、英文卡面母语校对",
+      "description": "请母语者校对灵感卡的泰文和英文卡面（网站与印刷版）。执行人待补充（人选待补充）。来源：Link 2026-11-20 15:22 口述，经 Elon 转达。日期为暂定，待 Link 确认。",
+      "category": "视觉",
+      "threads": [
+        "物·灵感卡"
+      ],
+      "date": "2026-11-21",
+      "timeHint": "上",
+      "layer": "中",
+      "location": "远程",
+      "status": "未开始",
+      "executor": [],
+      "participants": [],
+      "pre": [
+        "T88"
+      ],
+      "pendingNote": "",
+      "notes": "日期为暂定，待 Link 确认。"
+    },
+    {
+      "id": "T96",
+      "title": "灵感卡网站部署上线",
+      "description": "水灯灵感卡网站（2026CMI水灯庆典 · 水灯灵感卡，计划地址 https://linklinkguan.github.io/cmi-loykrathong-cards/ ，仓库 Linklinkguan/cmi-loykrathong-cards）部署上线，Elon 负责（正在开发部署中）。来源：Link 2026-11-20 15:22 口述，经 Elon 转达。日期为暂定，待 Link 确认。",
+      "category": "视觉",
+      "threads": [
+        "物·灵感卡"
+      ],
+      "date": "2026-11-21",
+      "timeHint": "上",
+      "layer": "中",
+      "location": "远程",
+      "status": "进行中",
+      "executor": [
+        "Elon"
+      ],
+      "participants": [],
+      "pre": [
+        "T87",
+        "T88",
+        "T89",
+        "T90",
+        "T91",
+        "T92"
+      ],
+      "pendingNote": "",
+      "notes": "日期为暂定，待 Link 确认。"
+    },
+    {
+      "id": "T97",
+      "title": "灵感卡 v1.3 印刷文件（正面左下角加网站二维码）",
+      "description": "印刷版灵感卡正面左下角加网站二维码，出 v1.3 印刷文件，Elon 负责。来源：Link 2026-11-20 15:22 口述，经 Elon 转达。日期为暂定，待 Link 确认。",
+      "category": "视觉",
+      "threads": [
+        "物·灵感卡"
+      ],
+      "date": "2026-11-21",
+      "timeHint": "中午",
+      "layer": "中",
+      "location": "远程",
+      "status": "未开始",
+      "executor": [
+        "Elon"
+      ],
+      "participants": [],
+      "pre": [
+        "T40",
+        "T95",
+        "T96"
+      ],
+      "pendingNote": "",
+      "notes": "日期为暂定，待 Link 确认。"
+    },
+    {
+      "id": "T98",
+      "title": "灵感卡网站截图验收",
+      "description": "Elon 把灵感卡网站截图发给 Link 和美术总监验收；验收在现场打印之前。来源：Link 2026-11-20 15:22 口述，经 Elon 转达。日期为暂定，待 Link 确认。",
+      "category": "视觉",
+      "threads": [
+        "物·灵感卡"
+      ],
+      "date": "2026-11-21",
+      "timeHint": "中午",
+      "layer": "中",
+      "location": "远程",
+      "status": "未开始",
+      "executor": [
+        "Elon"
+      ],
+      "participants": [],
+      "pre": [
+        "T96"
+      ],
+      "pendingNote": "",
+      "notes": "日期为暂定，待 Link 确认。"
+    },
+    {
+      "id": "T99",
+      "title": "现场打印灵感卡",
+      "description": "按 v1.3 印刷文件现场打印灵感卡。执行人待补充。来源：Link 2026-11-20 15:22 口述，经 Elon 转达。日期为暂定，待 Link 确认。",
+      "category": "视觉",
+      "threads": [
+        "物·灵感卡"
+      ],
+      "date": "2026-11-21",
+      "timeHint": "晚",
+      "layer": "硬",
+      "location": "现场",
+      "status": "未开始",
+      "executor": [],
+      "participants": [],
+      "pre": [
+        "T97",
+        "T98"
+      ],
+      "pendingNote": "",
+      "notes": "日期为暂定，待 Link 确认。"
     }
   ],
   "claims": []

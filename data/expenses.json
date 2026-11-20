@@ -2,7 +2,7 @@
   "version": 1,
   "meta": {
     "title": "费用与支出",
-    "updatedAt": "2026-11-19T19:28:57.811927+07:00",
+    "updatedAt": "2026-11-20T15:01:24.732824+07:00",
     "timeZone": "Asia/Bangkok",
     "currency": "THB",
     "import": {
@@ -118,6 +118,11 @@
         "id": "社区展示",
         "name": "社区展示",
         "color": "#7F9370"
+      },
+      {
+        "id": "社区采购",
+        "name": "社区采购｜水灯节相关（不计活动账）",
+        "color": "#8A765D"
       }
     ],
     "statuses": [
@@ -3986,6 +3991,82 @@
       "source": "Link 11-19 19:27 口述，经 Elon 转达",
       "notes": "金额含在 P038 合计 952 内，不重复计入；Link 11-19 19:27 报；数量未报；付款方式：待补充",
       "updatedAt": "2026-11-19T19:28:57.811927+07:00"
+    },
+    {
+      "id": "P087",
+      "item": "ONE 透明PVC卡套 5.6×8.8cm",
+      "purpose": "灵感卡卡套（需卡缩至约52×84mm）",
+      "category": "社区采购",
+      "taskIds": [],
+      "quantity": "1",
+      "unit": "包",
+      "budgetUnitPrice": "",
+      "budgetSubtotal": "",
+      "actual": "",
+      "payer": "Link",
+      "place": "OfficeMate 清迈 Central Festival",
+      "date": "2026-11-20",
+      "status": "已购",
+      "source": "Link 11-20 口述+收据 000BC-000029484",
+      "notes": "社区采购｜水灯节相关；【不计入水灯节活动账】社区账本记录；原价240铢，实付约231.1铢（含按比例折扣）；金额故意不填入「实际」以免计入活动合计；标签待 Link 确认",
+      "updatedAt": "2026-11-20T14:32:29.957616+07:00"
+    },
+    {
+      "id": "P088",
+      "item": "Elephant 名牌标签 A17 80×105mm",
+      "purpose": "名牌",
+      "category": "社区采购",
+      "taskIds": [],
+      "quantity": "1",
+      "unit": "包",
+      "budgetUnitPrice": "",
+      "budgetSubtotal": "",
+      "actual": "",
+      "payer": "Link",
+      "place": "OfficeMate 清迈 Central Festival",
+      "date": "2026-11-20",
+      "status": "已购",
+      "source": "Link 11-20 口述+收据 000BC-000029484",
+      "notes": "社区采购｜水灯节相关；【不计入水灯节活动账】社区账本记录；原价39铢，实付约37.55铢（含按比例折扣）；金额故意不填入「实际」以免计入活动合计；标签待 Link 确认",
+      "updatedAt": "2026-11-20T14:32:30.038047+07:00"
+    },
+    {
+      "id": "P089",
+      "item": "PVC 120微米 A4 喷墨贴纸（Hi-jet）",
+      "purpose": "标识牌贴纸",
+      "category": "社区采购",
+      "taskIds": [],
+      "quantity": "1",
+      "unit": "包",
+      "budgetUnitPrice": "",
+      "budgetSubtotal": "",
+      "actual": "",
+      "payer": "Link",
+      "place": "OfficeMate 清迈 Central Festival",
+      "date": "2026-11-20",
+      "status": "已购",
+      "source": "Link 11-20 口述+收据 000BC-000029484",
+      "notes": "社区采购｜水灯节相关；【不计入水灯节活动账】社区账本记录；原价279铢，实付约268.68铢（含按比例折扣）；金额故意不填入「实际」以免计入活动合计；标签待 Link 确认",
+      "updatedAt": "2026-11-20T14:32:30.119388+07:00"
+    },
+    {
+      "id": "P090",
+      "item": "IWATANI 卡式丁烷燃气罐 250g×4",
+      "purpose": "燃气（用途待确认，候选水灯节现场）",
+      "category": "社区采购",
+      "taskIds": [],
+      "quantity": "1",
+      "unit": "包",
+      "budgetUnitPrice": "",
+      "budgetSubtotal": "",
+      "actual": "",
+      "payer": "Link",
+      "place": "Makro 清迈",
+      "date": "2026-11-20",
+      "status": "待确认",
+      "source": "Link 11-20 口述+Makro 收据 14:56",
+      "notes": "社区采购｜水灯节相关（待确认）；【不计入水灯节活动账】社区账本记录；含税 155 铢，现金，Link 付；金额故意不填「实际」；待 Link 确认",
+      "updatedAt": "2026-11-20T15:01:24.732824+07:00"
     }
   ]
 }
