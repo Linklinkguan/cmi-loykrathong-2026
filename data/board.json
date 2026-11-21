@@ -2,7 +2,7 @@
   "version": 3,
   "meta": {
     "title": "2026 CMI 水灯节庆典筹备任务管理",
-    "updatedAt": "2026-11-21T17:14:54.121335+07:00",
+    "updatedAt": "2026-11-22T00:40:07.886543+07:00",
     "timeZone": "Asia/Bangkok",
     "heroTitle": "水灯节 · 筹备总览",
     "event": {
@@ -85,6 +85,12 @@
       "id": "密航",
       "name": "密航",
       "color": "#5979A6",
+      "aliases": []
+    },
+    {
+      "id": "雪雪",
+      "name": "雪雪",
+      "color": "#8054A6",
       "aliases": []
     }
   ],
@@ -3519,6 +3525,35 @@
           "time": "2026-11-21 16:02",
           "status": "进行中",
           "note": "今天在帮忙清理地面、扔垃圾。来源：语音",
+          "by": "Link"
+        }
+      ]
+    },
+    {
+      "id": "T113",
+      "title": "采购空想食堂食材（Makro）",
+      "description": "紫姀、雪雪于 2026-11-21 晚在 Makro 清迈店采购水灯节庆典空想食堂食材，实付 6666.5 泰铢。时长待补充。来源：Link 2026-11-22 00:37 口述，经 Elon 转达。",
+      "category": "采买",
+      "threads": [
+        "食·餐饮"
+      ],
+      "date": "2026-11-21",
+      "timeHint": "晚",
+      "layer": "中",
+      "location": "外出",
+      "status": "已完成",
+      "executor": [
+        "紫姀",
+        "雪雪"
+      ],
+      "participants": [],
+      "pre": [],
+      "pendingNote": "",
+      "notes": "",
+      "progress_log": [
+        {
+          "time": "2026-11-22 00:37",
+          "note": "紫姀、雪雪于 2026-11-21 晚在 Makro 清迈店采购空想食堂食材，实付 6666.5 泰铢",
           "by": "Link"
         }
       ]
