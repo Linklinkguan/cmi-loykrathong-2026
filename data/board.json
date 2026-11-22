@@ -2,7 +2,7 @@
   "version": 3,
   "meta": {
     "title": "2026 CMI 水灯节庆典筹备任务管理",
-    "updatedAt": "2026-11-22T00:40:07.886543+07:00",
+    "updatedAt": "2026-11-22T09:51:57.640770+07:00",
     "timeZone": "Asia/Bangkok",
     "heroTitle": "水灯节 · 筹备总览",
     "event": {
@@ -91,6 +91,12 @@
       "id": "雪雪",
       "name": "雪雪",
       "color": "#8054A6",
+      "aliases": []
+    },
+    {
+      "id": "wangshen",
+      "name": "wangshen",
+      "color": "#B07935",
       "aliases": []
     }
   ],
@@ -3484,18 +3490,26 @@
       "timeHint": "晚",
       "layer": "中",
       "location": "外出",
-      "status": "未开始",
+      "status": "已完成",
       "executor": [
-        "子禾"
+        "子禾",
+        "紫姀",
+        "wangshen"
       ],
       "participants": [],
       "pre": [],
       "pendingNote": "",
-      "notes": "",
+      "notes": "时长待补充。子禾仍保留为执行人。",
       "progress_log": [
         {
           "time": "2026-11-21 16:00",
           "note": "今晚去市场买花，由子禾负责。来源：语音",
+          "by": "Link"
+        },
+        {
+          "time": "2026-11-22 09:49",
+          "status": "已完成",
+          "note": "鲜花已买好，紫姀和 wangshen 一起购买，共花费 2260 泰铢",
           "by": "Link"
         }
       ]
